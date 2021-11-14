@@ -4,7 +4,7 @@ import * as TelegramBot from "node-telegram-bot-api"
 import { Message } from "node-telegram-bot-api"
 import { CookieJar } from "tough-cookie"
 
-import { backup, AWSS3Settings, DedeletedError, InvalidFormat, createAccount } from "dedeleted"
+import { backup, AWSS3Settings, DedeletedError, InvalidFormat, createAccount, getAccountInfo } from "dedeleted"
 
 import { getConfig, getContents, getOptions, getShareGroup, getShareGroupConfigs, saveResult, updateConfig, updateShareGroup } from "@libs/backupUtils"
 import { getUserID, reply } from "@libs/botUtils"
@@ -38,17 +38,14 @@ const onTelegraphAccountCommand: CommandHandler = async (bot, command, args, mes
   const userID = message.from.id
   const config = await getConfig(userID)
   let text = ""
-  let oldToken = ""
   if (command === "/new-telegraph-account") {
-    oldToken = config.telegraphAccount.access_token
     config.telegraphAccount = await createAccount(userID.toString())
     text = "Telegra.ph 帐号创建成功"
   } else {
-    text = "当前 Telegra.ph 帐号"
-  }
-  text += ` Token:\n${config.telegraphAccount.access_token}`
-  if (oldToken !== "") {
-    text += `\n\n原 Token:\n${oldToken}`
+    const info = await getAccountInfo(config.telegraphAccount.access_token)
+    text = `当前 Telegra.ph 帐号信息：\n\n- 发表数量: ${
+      info.page_count
+    }`
   }
   await reply(bot, message, text)
 }
