@@ -1,0 +1,15 @@
+{
+  "Records": [
+    {
+      "messageId": "messageId",
+      "receiptHandle": "MessageReceiptHandle",
+      "body": "{\"update_id\":10000,\"message\":{\"text\":\"https://www.weibo.com/5634737637/L1lHiDN3W\",\"message_id\":134567890097,\"date\":1441645532,\"chat\":{\"last_name\":\"Test Lastname\",\"type\":\"private\",\"id\":1111111,\"first_name\":\"Test Firstname\",\"username\":\"Testusername\"},\"from\":{\"last_name\":\"Test Lastname\",\"type\":\"private\",\"id\":1111111,\"first_name\":\"Test Firstname\",\"username\":\"Testusername\"},\"query\":\"inline query\",\"offset\":\"\"}}",
+      "attributes": [{}],
+      "messageAttributes": {},
+      "md5OfBody": "md5OfBody",
+      "eventSource": "aws:sqs",
+      "eventSourceARN": "arn:aws:sqs:region:accessid:Wbbu.fifo",
+      "awsRegion": "region"
+    }
+  ]
+}

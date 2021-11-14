@@ -3,7 +3,7 @@ import * as TelegramBot from "node-telegram-bot-api"
 import { Update } from "node-telegram-bot-api"
 
 import { formatJSONResponse } from "@libs/apiGateway"
-import { getUpdateType } from "@libs/botUtils"
+import { getBot, getUpdateType } from "@libs/botUtils"
 import { BOT_TOKEN } from "@libs/config"
 import { middyfy } from "@libs/lambda"
 
@@ -13,21 +13,22 @@ import { onInlineQuery } from "./inline"
 
 const handleUpdate = async (bot: TelegramBot, update: TelegramBot.Update) => {
   const type = getUpdateType(update)
-  if (!(type in update)) {
+  const entity = update[type]
+  if (entity === undefined) {
     throw new Error(`Update type ${type} not found`)
   }
   switch (type) {
     case "message":
-      await onCommand(bot, update.message)
+      await onCommand(bot, entity as TelegramBot.Message)
       break
     case "inline_query":
-      await onInlineQuery(bot, update.inline_query)
+      await onInlineQuery(bot, entity as TelegramBot.InlineQuery)
       break
   }
 }
 
 const webhook: Handler<{ Records: SQSRecord[] }> = async (event) => {
-  const bot = new TelegramBot(BOT_TOKEN)
+  const bot = getBot(BOT_TOKEN)
   for (const record of event.Records) {
     const update = JSON.parse(record.body) as Update
     handleUpdate(bot, update)

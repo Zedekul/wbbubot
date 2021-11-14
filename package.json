@@ -11,18 +11,24 @@
     "node": ">=14.15.0"
   },
   "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.41.0",
     "@aws-sdk/client-sqs": "^3.41.0",
+    "@aws-sdk/util-dynamodb": "^3.41.0",
     "@middy/core": "^2.5.3",
     "@middy/http-json-body-parser": "^2.5.3",
     "@types/node-telegram-bot-api": "^0.53.2",
+    "@types/tough-cookie": "^4.0.1",
+    "dedeleted": "file:../dedeleted",
     "dotenv": "^10.0.0",
-    "node-telegram-bot-api": "^0.54.0"
+    "node-telegram-bot-api": "^0.54.0",
+    "tough-cookie": "^4.0.0"
   },
   "devDependencies": {
     "@serverless/typescript": "^2.23.0",
     "@types/aws-lambda": "^8.10.71",
     "@types/node": "^14.14.25",
     "json-schema-to-ts": "^1.5.0",
+    "node-html-parser": "^5.1.0",
     "serverless": "^2.23.0",
     "serverless-esbuild": "^1.17.1",
     "ts-node": "^9.1.1",
