@@ -134,12 +134,12 @@ Cookie 设置地址：https://douban.com
 使用以下命令设置登录状态：
 
 ```
-/cookie url [cookie_values]
+/cookie url [cookie_string]
 ```
 
-`url` 为指定网站的地址，`cookie_values` 为 Cookie 的内容。
+`url` 为指定网站的地址，`cookie_string` 为 Cookie 的内容。
 
-如果不提供 `cookie_values`，则表示显示在该网站的当前登录状态。
+如果不提供 `cookie_string`，则表示显示在该网站的当前登录状态。
 
 #### 取得 Cookie 的办法
 
@@ -176,17 +176,22 @@ Cookie 设置地址：https://douban.com
 如果想与朋友共享登录状态和 AWS S3 设置，可以使用以下命令创建或加入一个共享组：
 
 ```
-/create-share group_name [password]
-/share [group_name] [password]
+/create-share group_name password
+/share [group_name password]
+/stop-share group_name
 ```
 
-`group_name` 为一个只由字母、数字和 `-` 符号组成的任意名字，`password` 为一个由字母、数字和空白符号以外的符号。
+**（此功能之后可能会有更改）**
 
-加入同一个共享组的人会共享使用登录状态和 AWS S3 的设置。如果同一个共享组中有多人设置了登录状态，则每次使用时会随机使用其中的一个或多个登录状态。S3 设置也会被随机使用。（此功能之后可能会有更改）
+`group_name` 为一个只由字母、数字和 `_` 符号组成的任意名字，`password` 为一个由字母、数字和空白符号以外的符号。
+
+加入同一个共享组的人会共享使用登录状态和 AWS S3 的设置。如果同一个共享组中有多人设置了登录状态，则每次使用时会随机使用其中的一个或多个登录状态。S3 设置也会被随机使用。
+
+每个用户只能创建/加入一个共享组，需要停止（退出）当前的共享状态才可以创建/加入新的组。
 
 第一个命令也可以用来更改密码（只有创建者有权限）。
 
-如果使用第二个命令时的 `group_name` 为空，显示已经加入的共享组信息。
+如果使用第二个命令时的参数为空，显示已经加入的共享组信息。
 
 ## 声明
 

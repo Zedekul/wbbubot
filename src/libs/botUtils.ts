@@ -2,7 +2,7 @@ const TelegramBotConstructor = require("node-telegram-bot-api")
 
 import type * as TelegramBot from "node-telegram-bot-api"
 
-import { Update } from "node-telegram-bot-api"
+import { Message, SendMessageOptions, Update } from "node-telegram-bot-api"
 import { PRODUCTION_MODE } from "./config"
 
 export type UpdateType = Exclude<keyof Update, "update_id">
@@ -47,3 +47,13 @@ export const useArgument = (args: string[], arg: string, consume = true): boolea
   }
   return true
 }
+
+export const reply = (
+  bot: TelegramBot, message: Message, text: string,
+  replyToMessage = false,
+  options: SendMessageOptions = {}
+): Promise<Message> =>
+  bot.sendMessage(message.chat.id, text, {
+    reply_to_message_id: replyToMessage ? message.message_id : undefined,
+    ...options
+  })

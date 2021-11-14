@@ -1,12 +1,12 @@
-import { Message } from "node-telegram-bot-api"
 import { CookieJar } from "tough-cookie"
 
 import { BackupResult, BackupOptions, createAccount } from "dedeleted"
 
-import { TABLE_BACKUPS, TABLE_CONFIGS, SHARE_GROUP_INDEX } from "./config"
-import { BackupKey, BackupEntity, ConfigEntity } from "./dbEntities"
+import { TABLE_BACKUPS, TABLE_CONFIGS, SHARE_GROUP_INDEX, TABLE_SHARE_GROUPS } from "./config"
+import { BackupKey, BackupEntity, ConfigEntity, ShareGroupEntity } from "./dbEntities"
 import { getItem, putItem, putBatch, indexQuery } from "./dynamoDB"
 import { useArgument } from "./botUtils"
+import { shuffle } from "./utils"
 
 export const getContents = (result: BackupResult, args: string[], reposting = false): {
   content: string,
@@ -58,24 +58,24 @@ export const getDefaultOptions = (): Partial<BackupOptions> => ({
   checkExisting: (sourceKey, id) => getExistingBackup({ sourceKey, id })
 })
 
-export const getOptions = async (message: Message): Promise<Partial<BackupOptions>> => {
-  const options = getDefaultOptions()
-  if (message.from === undefined) {
-    return options
-  }
-  const userID = message.from.id
+export const getConfig = async (userID: number): Promise<ConfigEntity> => {
   const config = await getItem<ConfigEntity>(
     TABLE_CONFIGS, { userID }
-  ) || await updateConfigs({
+  ) || await updateConfig({
     userID,
     telegraphAccount: await createAccount(userID.toString())
   })
+  return config
+}
+
+export const getOptions = async (config: ConfigEntity): Promise<Partial<BackupOptions>> => {
+  const options = getDefaultOptions()
   options.telegraphAccount = config.telegraphAccount
   await setSharableOptions(options, config)
   return options
 }
 
-export const updateConfigs = async (config: ConfigEntity): Promise<ConfigEntity> => {
+export const updateConfig = async (config: ConfigEntity): Promise<ConfigEntity> => {
   await putItem(TABLE_CONFIGS, config)
   return config
 }
@@ -98,6 +98,12 @@ export const saveResult = async (result: BackupResult): Promise<void> => {
   }
   await putBatch(TABLE_BACKUPS, resultBatch)
 }
+
+export const updateShareGroup = (id: string, creatorID: number, hashedPassword: string): Promise<void> =>
+  putItem(TABLE_SHARE_GROUPS, { id, creatorID, password: hashedPassword })
+
+export const getShareGroup = (id: string): Promise<ShareGroupEntity | undefined> =>
+  getItem<ShareGroupEntity>(TABLE_SHARE_GROUPS, { id })
 
 const getShareGroupConfigs = async (
   shareGroup: string

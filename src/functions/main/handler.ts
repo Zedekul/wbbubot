@@ -9,21 +9,30 @@ import { middyfy } from "@libs/lambda"
 
 import { onCommand } from "./commands"
 import { onInlineQuery } from "./inline"
+import { DedeletedError } from "dedeleted"
 
 
-const handleUpdate = async (bot: TelegramBot, update: TelegramBot.Update) => {
+const handleUpdate = async (bot: TelegramBot, update: TelegramBot.Update): Promise<void> => {
   const type = getUpdateType(update)
   const entity = update[type]
-  if (entity === undefined) {
-    throw new Error(`Update type ${type} not found`)
-  }
-  switch (type) {
-    case "message":
-      await onCommand(bot, entity as TelegramBot.Message)
-      break
-    case "inline_query":
-      await onInlineQuery(bot, entity as TelegramBot.InlineQuery)
-      break
+  try {
+    if (entity === undefined) {
+      throw new Error(`Update type ${type} not found`)
+    }
+    switch (type) {
+      case "message":
+        await onCommand(bot, entity as TelegramBot.Message)
+        break
+      case "inline_query":
+        await onInlineQuery(bot, entity as TelegramBot.InlineQuery)
+        break
+      default:
+        throw new Error(`Update type ${type} not supported`)
+    }
+  } catch (e) {
+    if (!(e as DedeletedError).skipLogging) {
+      console.error(e)
+    }
   }
 }
 

@@ -12,6 +12,7 @@ export type BackupEntity = Exclude<"reposted", BackupResult> & {
 export interface ConfigEntity {
   userID: number
   telegraphAccount: TelegraphAccount,
+  isOwner?: true
   shareGroup?: string
   awsS3?: AWSS3Settings
   cookies?: CookieJar.Serialized
@@ -20,5 +21,5 @@ export interface ConfigEntity {
 export interface ShareGroupEntity {
   id: string
   password: string
-  creator: number
+  creatorID: number
 }

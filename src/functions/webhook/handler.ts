@@ -10,7 +10,7 @@ import { middyfy } from "@libs/lambda"
 import schema from "./schema"
 
 
-const sendToSQS = async (update: Update) => {
+const sendToSQS = async (update: Update): Promise<void> => {
   const sqs = new SQSClient({ region: AWS_REGION })
   const id = update.update_id.toString()
   const userID = getUserID(update).toString()
@@ -21,9 +21,9 @@ const sendToSQS = async (update: Update) => {
     QueueUrl: SQS_QUEUE_URL
   })
   try {
-    sqs.send(command)
-  } catch (error) {
-    console.error(error)
+    await sqs.send(command)
+  } catch (e) {
+    console.error(e)
   }
 }
 
