@@ -10,6 +10,7 @@ import {
 import { marshall, unmarshall } from "@aws-sdk/util-dynamodb"
 
 import { AWS_REGION } from "./config"
+import { makeBatches } from "./utils"
 
 export type Keys = { [key: string]: string | number }
 
@@ -54,9 +55,7 @@ export const putItem = async <T>(tableName: string, item: T): Promise<void> => {
 
 export const putBatch = async <T>(tableName: string, items: T[]): Promise<void> => {
   const client = new DynamoDBClient({ region: AWS_REGION })
-  const n = items.length
-  for (let i = 0; i < n; i += 25) {
-    const batch = items.slice(i, i + 25)
+  for (const batch of makeBatches(items, 25)) {
     const params: BatchWriteItemInput = {
       RequestItems: {
         [tableName]: batch.map(x => ({

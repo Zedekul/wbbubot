@@ -10,3 +10,10 @@ export const shuffle = <T>(arr: T[]): T[] => {
 
 export const hashPassword = (password: string): string =>
   createHash("sha256").update(password).digest("hex")
+
+export function* makeBatches<T>(arr: T[], batchSize: number): IterableIterator<T[]> {
+  const n = arr.length
+  for (let i = 0; i < n; i += batchSize) {
+    yield arr.slice(i, i + batchSize)
+  }
+}

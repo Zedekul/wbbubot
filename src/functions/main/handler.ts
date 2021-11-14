@@ -38,10 +38,10 @@ const handleUpdate = async (bot: TelegramBot, update: TelegramBot.Update): Promi
 
 const webhook: Handler<{ Records: SQSRecord[] }> = async (event) => {
   const bot = getBot(BOT_TOKEN)
-  for (const record of event.Records) {
+  await Promise.all(event.Records.map(async (record) => {
     const update = JSON.parse(record.body) as Update
-    handleUpdate(bot, update)
-  }
+    await handleUpdate(bot, update)
+  }))
   return formatJSONResponse()
 }
 

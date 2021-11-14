@@ -3,15 +3,17 @@ import type { AWS } from "@serverless/typescript"
 import main from "@functions/main"
 import webhook from "@functions/webhook"
 import {
-  AWS_ACCOUNT_ID, AWS_REGION,
+  AWS_ACCOUNT_ID,
   BOT_TOKEN, PRODUCTION_MODE, SHARE_GROUP_INDEX, SQS_QUEUE_NAME,
   TABLE_BACKUPS, TABLE_CONFIGS, TABLE_SHARE_GROUPS
 } from "@libs/config"
 
+const DEFAULT_TELEGRAPH_ACCOUNT_TOKEN = process.env.DEFAULT_TELEGRAPH_ACCOUNT_TOKEN
+
 if (
   AWS_ACCOUNT_ID === undefined ||
-  AWS_REGION === undefined ||
-  BOT_TOKEN === undefined
+  BOT_TOKEN === undefined ||
+  DEFAULT_TELEGRAPH_ACCOUNT_TOKEN === undefined
 ) {
   throw new Error("envs should be initialized")
 }
@@ -37,8 +39,10 @@ const serverlessConfiguration: AWS = {
       SQS_QUEUE_NAME,
       TABLE_CONFIGS,
       TABLE_BACKUPS,
+      DEFAULT_TELEGRAPH_ACCOUNT_TOKEN,
       PRODUCTION_MODE: PRODUCTION_MODE ? "1" : "0",
       AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
+      NTBA_FIX_319: "1",
       NODE_OPTIONS: "--enable-source-maps --stack-trace-limit=1000",
     },
     iam: {
@@ -58,7 +62,8 @@ const serverlessConfiguration: AWS = {
               "dynamodb:PutItem",
               "dynamodb:GetItem",
               "dynamodb:UpdateItem",
-              "dynamodb:DeleteItem"
+              "dynamodb:DeleteItem",
+              "dynamodb:BatchWriteItem"
             ],
             Resource: "arn:aws:dynamodb:*:*:table/wbbu-*",
           }
@@ -79,7 +84,10 @@ const serverlessConfiguration: AWS = {
         Type: "AWS::SQS::Queue",
         Properties: {
           QueueName: SQS_QUEUE_NAME,
-          FifoQueue: true
+          FifoQueue: true,
+          ContentBasedDeduplication: true,
+          KmsDataKeyReusePeriodSeconds: 86400,
+          KmsMasterKeyId: "alias/aws/sqs"
         }
       },
       BackupsDynamoDbTable: {

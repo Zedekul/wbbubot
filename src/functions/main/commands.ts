@@ -1,4 +1,4 @@
-import * as assert from "assert"
+import assert from "assert"
 
 import * as TelegramBot from "node-telegram-bot-api"
 import { Message } from "node-telegram-bot-api"
@@ -7,19 +7,20 @@ import { CookieJar } from "tough-cookie"
 import { backup, AWSS3Settings, DedeletedError, InvalidFormat, createAccount, getAccountInfo } from "dedeleted"
 
 import { getConfig, getContents, getOptions, getShareGroup, getShareGroupConfigs, saveResult, updateConfig, updateShareGroup } from "@libs/backupUtils"
-import { getUserID, reply } from "@libs/botUtils"
+import { reply, sendContent } from "@libs/botUtils"
 import { BOT_DOCS_URL, BOT_USERNAME, TABLE_CONFIGS, TABLE_SHARE_GROUPS } from "@libs/config"
 import { hashPassword } from "@libs/utils"
 import { deleteItem, putBatch } from "@libs/dynamoDB"
 
-type MessageWithFrom = Message & {
+type MessageWithFromAndText = Message & {
   from: TelegramBot.User,
+  text: string
 }
 type CommandHandler = (
   bot: TelegramBot,
   command: string,
   args: string[],
-  message: MessageWithFrom
+  message: MessageWithFromAndText
 ) => Promise<void>
 
 const throwUsage = (usage: string): never => { throw new InvalidFormat(`使用方法为 \`${usage}\``) }
@@ -43,9 +44,8 @@ const onTelegraphAccountCommand: CommandHandler = async (bot, command, args, mes
     text = "Telegra.ph 帐号创建成功"
   } else {
     const info = await getAccountInfo(config.telegraphAccount.access_token)
-    text = `当前 Telegra.ph 帐号信息：\n\n- 发表数量: ${
-      info.page_count
-    }`
+    text = `当前 Telegra.ph 帐号信息：\n\n- 发表数量: ${info.page_count
+      }`
   }
   await reply(bot, message, text)
 }
@@ -172,12 +172,14 @@ const onOther: CommandHandler = async (bot, url, args, message) => {
   const config = await getConfig(message.from.id)
   const options = await getOptions(config)
   const result = await backup(url, options)
-  saveResult(result).catch(console.error)
+  if (result.justCreated) {
+    delete result.justCreated
+    await saveResult(result)
+  }
   const contents = getContents(result, args)
   for (const content of contents) {
-    await reply(bot, message, content.content, false, {
-      parse_mode: "HTML",
-      disable_web_page_preview: !content.showPreview,
+    await sendContent(bot, message.chat.id, content, {
+      parse_mode: "HTML"
     })
   }
 }
@@ -188,7 +190,7 @@ export const onCommand = async (bot: TelegramBot, message: Message): Promise<voi
       await reply(bot, message, "不支持的命令。", true)
       return
     }
-    const msg = message as MessageWithFrom
+    const msg = message as MessageWithFromAndText
     const [command, ...args] = msg.text.trim().split(/\s+/)
     if (command.startsWith("/")) {
       if (command === "/start") {
@@ -215,7 +217,7 @@ export const onCommand = async (bot: TelegramBot, message: Message): Promise<voi
           break
       }
     } else {
-      onOther(bot, command, args, msg)
+      await onOther(bot, command, args, msg)
     }
   } catch (e) {
     const err = e as DedeletedError

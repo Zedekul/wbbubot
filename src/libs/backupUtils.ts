@@ -5,13 +5,11 @@ import { BackupResult, BackupOptions, createAccount } from "dedeleted"
 import { TABLE_BACKUPS, TABLE_CONFIGS, SHARE_GROUP_INDEX, TABLE_SHARE_GROUPS } from "./config"
 import { BackupKey, BackupEntity, ConfigEntity, ShareGroupEntity } from "./dbEntities"
 import { getItem, putItem, putBatch, indexQuery } from "./dynamoDB"
-import { useArgument } from "./botUtils"
+import { MessageContent, useArgument } from "./botUtils"
 import { shuffle } from "./utils"
+import { InputMedia } from "node-telegram-bot-api"
 
-export const getContents = (result: BackupResult, args: string[], reposting = false): {
-  content: string,
-  showPreview: boolean
-}[] => {
+export const getContents = (result: BackupResult, args: string[], reposting = false): MessageContent[] => {
   const { reposted } = result
   const isTextContent = useArgument(args, "text")
   const contents = reposted.length > 0
@@ -20,12 +18,34 @@ export const getContents = (result: BackupResult, args: string[], reposting = fa
   let content = reposting ? "转发自: " : ""
   let showPreview = true
   const pages = result.pages
+  const medias: InputMedia[] = []
+  const files: string[] = []
   if (isTextContent || pages.length === 0) {
     if (result.authorName !== undefined) {
       content += `@${result.authorName}: `
     }
     content += result.content
     content += ` (<a href="${result.source}">source</a>)`
+    for (const file of result.files) {
+      const url = file.uploaded === undefined ? file.source : file.uploaded
+      switch (file.type) {
+        case "image":
+          medias.push({
+            type: "photo",
+            media: url
+          })
+          break
+        case "video":
+          medias.push({
+            type: "video",
+            media: url
+          })
+          break
+        default:
+          files.push(url)
+          break
+      }
+    }
     showPreview = false
   } else if (pages.length === 1) {
     content += `<a href="${pages[0].url}">${pages[0].title}</a>`
@@ -37,7 +57,13 @@ export const getContents = (result: BackupResult, args: string[], reposting = fa
       content += `<a href="${page.url}">${page.title}</a>`
     })
   }
-  contents.push({ content, showPreview })
+  contents.push({
+    text: content,
+    medias,
+    files,
+    showPreview,
+    parseMode: "HTML"
+  })
   return contents
 }
 
@@ -89,7 +115,7 @@ export const saveResult = async (result: BackupResult): Promise<void> => {
     for (const x of item.reposted) {
       const { sourceKey, id } = x
       stack.push(x)
-      reposted.push({ sourceKey, id})
+      reposted.push({ sourceKey, id })
     }
     delete item.reposted
     const entity = item as unknown as BackupEntity
