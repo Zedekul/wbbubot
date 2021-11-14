@@ -118,12 +118,10 @@ Cookie 设置地址：https://douban.com
 本 Bot 会为每个用户自动建立一个 Telegra.ph 帐号，用来发表转发的文章。如果你需要获取这个帐号的信息，使用这个命令：
 
 ```
-/get-telegraph-account
+/telegraph-account
 ```
 
-返回的信息将包含一个 `Access Token`，详情请见 [Telegraph API](https://telegra.ph/api)。
-
-使用这个 `Access Token` 可以用来编辑已发表的内容等。注意请不要撤回（Revoke）这个帐号，如果需要重新建立帐号请使用这个命令：
+如果需要重新建立帐号请使用这个命令：
 
 ```
 /new-telegraph-account
@@ -178,7 +176,7 @@ Cookie 设置地址：https://douban.com
 ```
 /create-share group_name password
 /share [group_name password]
-/stop-share group_name
+/stop-share group_name [password]
 ```
 
 **（此功能之后可能会有更改）**
@@ -192,6 +190,8 @@ Cookie 设置地址：https://douban.com
 第一个命令也可以用来更改密码（只有创建者有权限）。
 
 如果使用第二个命令时的参数为空，显示已经加入的共享组信息。
+
+创建者需要输入密码才能解散共享组。
 
 ## 声明
 

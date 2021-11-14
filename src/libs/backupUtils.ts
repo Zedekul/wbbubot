@@ -105,7 +105,7 @@ export const updateShareGroup = (id: string, creatorID: number, hashedPassword: 
 export const getShareGroup = (id: string): Promise<ShareGroupEntity | undefined> =>
   getItem<ShareGroupEntity>(TABLE_SHARE_GROUPS, { id })
 
-const getShareGroupConfigs = async (
+export const getShareGroupConfigs = async (
   shareGroup: string
 ): Promise<ConfigEntity[]> => {
   const configs = await indexQuery<ConfigEntity>(

@@ -1,6 +1,8 @@
 import {
   BatchWriteItemCommand,
   BatchWriteItemInput,
+  DeleteItemCommand,
+  DeleteItemCommandInput,
   DynamoDBClient,
   GetItemCommand, GetItemCommandInput,
   PutItemCommand, PutItemCommandInput, QueryCommand, QueryCommandInput
@@ -52,14 +54,27 @@ export const putItem = async <T>(tableName: string, item: T): Promise<void> => {
 
 export const putBatch = async <T>(tableName: string, items: T[]): Promise<void> => {
   const client = new DynamoDBClient({ region: AWS_REGION })
-  const params: BatchWriteItemInput = {
-    RequestItems: {
-      [tableName]: items.map(x => ({
-        PutRequest: {
-          Item: marshall(x)
-        }
-      }))
+  const n = items.length
+  for (let i = 0; i < n; i += 25) {
+    const batch = items.slice(i, i + 25)
+    const params: BatchWriteItemInput = {
+      RequestItems: {
+        [tableName]: batch.map(x => ({
+          PutRequest: {
+            Item: marshall(x)
+          }
+        }))
+      }
     }
+    await client.send(new BatchWriteItemCommand(params))
   }
-  await client.send(new BatchWriteItemCommand(params))
+}
+
+export const deleteItem = async (tableName: string, keys: Keys): Promise<void> => {
+  const client = new DynamoDBClient({ region: AWS_REGION })
+  const params: DeleteItemCommandInput = {
+    TableName: tableName,
+    Key: marshall(keys)
+  }
+  await client.send(new DeleteItemCommand(params))
 }
