@@ -1,5 +1,7 @@
 # WbbuBot
 
+[https://t.me/wbbubot](https://t.me/wbbubot)
+
 中文互联网转载/存档 Bot
 
 ## 基本功能
@@ -152,7 +154,7 @@ Cookie 设置地址：https://douban.com
 
 以 Chrome 登录微博为例，获取 Cookie 的步骤：
 
-- 在 https://m.weibo.cn 进行登录
+- 在 [https://m.weibo.cn](https://m.weibo.cn) 进行登录
 - 在登录后重新访问上述链接。
 - 使用 `Ctrl+Shift+I` 打开开发者工具窗口，切换到 Network 选项卡。
 - 刷新页面，在开发者工具中找到 Name 为当前网址的那一行（通常为第一项），单击选中。

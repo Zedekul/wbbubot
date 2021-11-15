@@ -3,6 +3,7 @@ import { AWS_ACCOUNT_ID, AWS_REGION, SQS_QUEUE_NAME } from "@libs/config"
 
 export default {
   handler: `${handlerPath(__dirname)}/handler.main`,
+  timeout: 20,
   events: [{
     sqs: `arn:aws:sqs:${AWS_REGION}:${AWS_ACCOUNT_ID}:${SQS_QUEUE_NAME}`
   }]

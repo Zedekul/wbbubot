@@ -2,7 +2,7 @@
 
 https://t.me/wbbubot
 
-一个用来存档中文互联网的 Telegram Bot。
+中文互联网转载/存档 Bot
 
 ## Usage
 
