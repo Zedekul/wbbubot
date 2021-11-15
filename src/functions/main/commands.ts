@@ -1,15 +1,15 @@
 import assert from "assert"
 
 import * as TelegramBot from "node-telegram-bot-api"
-import { Message } from "node-telegram-bot-api"
+import { Message, User } from "node-telegram-bot-api"
 import { CookieJar } from "tough-cookie"
 
-import { backup, AWSS3Settings, DedeletedError, InvalidFormat, createAccount, getAccountInfo } from "dedeleted"
+import { backup, AWSS3Settings, DedeletedError, InvalidFormat, createAccount, getAccountInfo, BackupResult } from "dedeleted"
 
 import { getOrCreateConfig, getContents, getExistingBackup, getOptions, getShareGroup, getShareGroupConfigs, saveResult, updateConfig, updateShareGroup } from "@libs/backupUtils"
 import { reply, sendContent, useArgument } from "@libs/botUtils"
 import { BOT_DOCS_URL, BOT_USERNAME, TABLE_CONFIGS, TABLE_SHARE_GROUPS } from "@libs/config"
-import { hashPassword } from "@libs/utils"
+import { hashPassword, isURL } from "@libs/utils"
 import { deleteItem, putBatch } from "@libs/dynamoDB"
 
 type MessageWithFromAndText = Message & {
@@ -30,7 +30,10 @@ const onStartCommand: CommandHandler = async (bot, _, args, message) => {
     const tmp = args[0].split("-")
     const sourceKey = tmp.shift()
     const id = tmp.join("-")
-    const result = await getExistingBackup({ sourceKey, id })
+    let result: BackupResult | undefined
+    if (sourceKey && id) {
+      result = await getExistingBackup({ sourceKey, id })
+    }
     if (result === undefined) {
       throw new DedeletedError("找不到内容。")
     }
@@ -181,7 +184,10 @@ const onShareCommand: CommandHandler = async (bot, command, args, message) => {
   }
 }
 
-const onOther: CommandHandler = async (bot, url, args, message) => {
+const onOtherBackup: CommandHandler = async (bot, url, args, message) => {
+  if (!isURL(url)) {
+    throw new InvalidFormat("请输入正确的链接")
+  }
   const config = await getOrCreateConfig(message.from.id)
   const options = await getOptions(config, args)
   const result = await backup(url, options)
@@ -202,7 +208,7 @@ const onOther: CommandHandler = async (bot, url, args, message) => {
 export const onCommand = async (bot: TelegramBot, message: Message): Promise<void> => {
   try {
     if (message.text === undefined || message.from === undefined) {
-      await reply(bot, message, "不支持的命令。", true)
+      // Message skipped
       return
     }
     const msg = message as MessageWithFromAndText
@@ -214,8 +220,14 @@ export const onCommand = async (bot: TelegramBot, message: Message): Promise<voi
         await onStartCommand(bot, command, args, msg)
         return
       }
+      if (command === "/backup") {
+        command = args.shift()
+        await onOtherBackup(bot, command, args, msg)
+        return
+      }
       if (msg.chat.type !== "private") {
         await reply(bot, msg, "请用私信方式进行设置。")
+        return
       }
       switch (command) {
         case "/telegraph-account":
@@ -240,7 +252,7 @@ export const onCommand = async (bot: TelegramBot, message: Message): Promise<voi
       if (command === "") {
         command = args.shift()
       }
-      await onOther(bot, command, args, msg)
+      await onOtherBackup(bot, command, args, msg)
     }
   } catch (e) {
     const err = e as DedeletedError

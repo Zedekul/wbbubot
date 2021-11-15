@@ -4,10 +4,17 @@
 
 ## 基本功能
 
-WbbuBot 是个 [Inline Bot](https://core.telegram.org/bots/inline)，可以直接通过下列方式使用（不区分大小写）：
+WbbuBot 是个 [Inline Bot](https://core.telegram.org/bots/inline)，可以直接通过下列方式使用：
 
+Inline 模式：
 ```
 @wbbubot url
+```
+
+或群聊模式：
+
+```
+/backup@wbbubot url
 ```
 
 将中文社交平台上的文章备份并转载到 [Telegram](https://telegram.org/) 平台上。

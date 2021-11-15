@@ -48,7 +48,9 @@ export const putItem = async <T>(tableName: string, item: T): Promise<void> => {
   const client = new DynamoDBClient({ region: AWS_REGION })
   const params: PutItemCommandInput = {
     TableName: tableName,
-    Item: marshall(item),
+    Item: marshall(item, {
+      removeUndefinedValues: true
+    }),
   }
   await client.send(new PutItemCommand(params))
 }
@@ -60,7 +62,9 @@ export const putBatch = async <T>(tableName: string, items: T[]): Promise<void> 
       RequestItems: {
         [tableName]: batch.map(x => ({
           PutRequest: {
-            Item: marshall(x)
+            Item: marshall(x, {
+              removeUndefinedValues: true
+            })
           }
         }))
       }

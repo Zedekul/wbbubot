@@ -91,6 +91,11 @@ export const getExistingBackup = async (key: BackupKey): Promise<BackupResult | 
   delete entity.reposted
   const result = entity as unknown as BackupResult
   result.reposted = reposted
+  try {
+    result.otherData = JSON.parse(entity.otherData)
+  } catch {
+    result.otherData = undefined
+  }
   return result
 }
 
@@ -139,6 +144,7 @@ export const saveResult = async (result: BackupResult): Promise<void> => {
     }
     delete item.reposted
     const entity = item as unknown as BackupEntity
+    entity.otherData = JSON.stringify(item.otherData)
     entity.reposted = reposted
     resultBatch.push(entity)
   }

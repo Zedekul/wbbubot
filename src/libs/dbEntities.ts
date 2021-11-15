@@ -3,10 +3,11 @@ import { CookieJar } from "tough-cookie"
 import { AWSS3Settings, BackupResult, TelegraphAccount, TelegraphPage } from "dedeleted"
 
 export type BackupKey = { sourceKey: string, id: string }
-export type BackupEntity = Exclude<"reposted", BackupResult> & {
+export type BackupEntity = Exclude<"otherData", Exclude<"reposted", BackupResult>> & {
   // keys of reposted BackupEntities
   // `sourceKey` should be the same as the orignal BackupEntity for now
-  reposted: BackupKey[]
+  reposted: BackupKey[],
+  otherData: string
 }
 
 export interface ConfigEntity {
