@@ -4,6 +4,7 @@ config()
 export const AWS_ACCOUNT_ID = process.env.AWS_ACCOUNT_ID
 export const AWS_REGION = process.env.AWS_REGION
 export const BOT_TOKEN = process.env.BOT_TOKEN
+export const VIDEO_DEFAULT_THUMB = process.env.VIDEO_DEFAULT_THUMB
 
 export const SQS_QUEUE_NAME = process.env.SQS_QUEUE_NAME || "Wbbu.fifo"
 export const TABLE_BACKUPS = process.env.TABLE_BACKUPS || "wbbu-backups"

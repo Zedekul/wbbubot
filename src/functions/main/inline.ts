@@ -1,11 +1,11 @@
 import parseHTML from "node-html-parser"
 import * as TelegramBot from "node-telegram-bot-api"
-import { InlineKeyboardButton, InlineKeyboardMarkup, InlineQuery, InlineQueryResult, InlineQueryResultDocument, InlineQueryResultPhoto, InlineQueryResultVideo } from "node-telegram-bot-api"
+import { InlineKeyboardMarkup, InlineQuery, InlineQueryResult, InlineQueryResultDocument, InlineQueryResultPhoto, InlineQueryResultVideo } from "node-telegram-bot-api"
 
 import { backup, BackupResult, DedeletedError, InvalidFormat } from "dedeleted"
 
 import { getConfig, getContents, getOptions, saveResult } from "@libs/backupUtils"
-import { BOT_USERNAME } from "@libs/config"
+import { BOT_USERNAME, VIDEO_DEFAULT_THUMB } from "@libs/config"
 import { isURL } from "@libs/utils"
 
 const getInlineKeyboardMarkup = (result: BackupResult): InlineKeyboardMarkup => ({
@@ -92,7 +92,7 @@ export const prepareResultInlined = async (result: BackupResult): Promise<Inline
       const video = x as unknown as InlineQueryResultVideo
       video.video_url = media.media
       video.mime_type = "video/mp4"
-      video.thumb_url = ""
+      video.thumb_url = VIDEO_DEFAULT_THUMB
       results.push(video)
     }
   }
