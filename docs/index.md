@@ -12,7 +12,7 @@ WbbuBot 是个 [Inline Bot](https://core.telegram.org/bots/inline)，可以直�
 
 将中文社交平台上的文章备份并转载到 [Telegram](https://telegram.org/) 平台上。
 
-给 WbbuBot 一个内容的链接 `url`，可以选择直接发出内容或者发出在 [Telegra.ph](https://telegra.ph) 上的存档链接。
+给 WbbuBot 一个内容的链接 `url`，可以选择发出在 [Telegra.ph](https://telegra.ph) 上的存档链接或者直接发出内容。（注意：Inline 模式限制每条消息里最多只能有一个图片或视频）
 
 也可以直接把 `url` 直接私信发给本 Bot。
 

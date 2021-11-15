@@ -6,8 +6,8 @@ import { CookieJar } from "tough-cookie"
 
 import { backup, AWSS3Settings, DedeletedError, InvalidFormat, createAccount, getAccountInfo } from "dedeleted"
 
-import { getConfig, getContents, getOptions, getShareGroup, getShareGroupConfigs, saveResult, updateConfig, updateShareGroup } from "@libs/backupUtils"
-import { reply, sendContent } from "@libs/botUtils"
+import { getConfig, getContents, getExistingBackup, getOptions, getShareGroup, getShareGroupConfigs, saveResult, updateConfig, updateShareGroup } from "@libs/backupUtils"
+import { reply, sendContent, useArgument } from "@libs/botUtils"
 import { BOT_DOCS_URL, BOT_USERNAME, TABLE_CONFIGS, TABLE_SHARE_GROUPS } from "@libs/config"
 import { hashPassword } from "@libs/utils"
 import { deleteItem, putBatch } from "@libs/dynamoDB"
@@ -25,7 +25,21 @@ type CommandHandler = (
 
 const throwUsage = (usage: string): never => { throw new InvalidFormat(`使用方法为 \`${usage}\``) }
 
-const onStartCommand: CommandHandler = async (bot, _, __, message) => {
+const onStartCommand: CommandHandler = async (bot, _, args, message) => {
+  if (args.length === 1) {
+    const tmp = args[0].split("-")
+    const sourceKey = tmp.shift()
+    const id = tmp.join("-")
+    const result = await getExistingBackup({ sourceKey, id })
+    if (result === undefined) {
+      throw new DedeletedError("找不到内容。")
+    }
+    const contents = getContents(result)
+    for (const content of contents) {
+      await sendContent(bot, message.chat.id, content)
+    }
+    return
+  }
   await getConfig(message.from.id)
   const text = `使用 \`@${BOT_USERNAME} url\` 存档一个页面\n更多说明与高级设置请参照 ${BOT_DOCS_URL}`
   await reply(bot, message, text)
@@ -176,11 +190,13 @@ const onOther: CommandHandler = async (bot, url, args, message) => {
     delete result.justCreated
     await saveResult(result)
   }
-  const contents = getContents(result, args)
+  let textDepth = 0
+  while (useArgument(args, "text")) {
+    textDepth += 1
+  }
+  const contents = getContents(result, textDepth)
   for (const content of contents) {
-    await sendContent(bot, message.chat.id, content, {
-      parse_mode: "HTML"
-    })
+    await sendContent(bot, message.chat.id, content)
   }
 }
 
@@ -193,7 +209,7 @@ export const onCommand = async (bot: TelegramBot, message: Message): Promise<voi
     const msg = message as MessageWithFromAndText
     const [command, ...args] = msg.text.trim().split(/\s+/)
     if (command.startsWith("/")) {
-      if (command === "/start") {
+      if (command === "/start" || command === "/help") {
         await onStartCommand(bot, command, args, msg)
         return
       }
@@ -214,6 +230,9 @@ export const onCommand = async (bot: TelegramBot, message: Message): Promise<voi
         case "/create-share":
         case "/share":
           await onShareCommand(bot, command, args, msg)
+          break
+        default:
+          await onStartCommand(bot, command, args, msg)
           break
       }
     } else {

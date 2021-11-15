@@ -1,9 +1,10 @@
+import { PRODUCTION_MODE } from "./config"
+
 const TelegramBotConstructor = require("node-telegram-bot-api")
 
 import type * as TelegramBot from "node-telegram-bot-api"
 
 import { Message, SendMessageOptions, Update } from "node-telegram-bot-api"
-import { PRODUCTION_MODE } from "./config"
 import { makeBatches } from "./utils"
 
 export type UpdateType = Exclude<keyof Update, "update_id">
@@ -13,15 +14,14 @@ export const getBot = (token: string): TelegramBot => {
   const proxy = new Proxy(bot, {
     get: (target, prop) => {
       const key = String(prop)
-      if (key.startsWith("send") && !PRODUCTION_MODE) {
+      if ((key.startsWith("send") || key.startsWith("answer")) && !PRODUCTION_MODE) {
         // Output to console when in development mode
         return (...args: any[]) => {
           console.log(`[${key}]`, ...args)
         }
       }
       return target[prop]
-    },
-
+    }
   })
   return proxy
 }
@@ -64,7 +64,8 @@ export interface MessageContent {
   text: string,
   medias: TelegramBot.InputMedia[]
   files: string[],
-  showPreview: boolean
+  showPreview: boolean,
+  pageURLs: string[],
   parseMode?: "HTML" | "Markdown"
 }
 

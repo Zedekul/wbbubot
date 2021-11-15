@@ -2,6 +2,8 @@ import type { Handler, SQSRecord } from "aws-lambda"
 import * as TelegramBot from "node-telegram-bot-api"
 import { Update } from "node-telegram-bot-api"
 
+import { DedeletedError } from "dedeleted"
+
 import { formatJSONResponse } from "@libs/apiGateway"
 import { getBot, getUpdateType } from "@libs/botUtils"
 import { BOT_TOKEN } from "@libs/config"
@@ -9,7 +11,6 @@ import { middyfy } from "@libs/lambda"
 
 import { onCommand } from "./commands"
 import { onInlineQuery } from "./inline"
-import { DedeletedError } from "dedeleted"
 
 
 const handleUpdate = async (bot: TelegramBot, update: TelegramBot.Update): Promise<void> => {

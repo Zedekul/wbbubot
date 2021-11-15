@@ -5,27 +5,27 @@ import { BackupResult, BackupOptions, createAccount } from "dedeleted"
 import { TABLE_BACKUPS, TABLE_CONFIGS, SHARE_GROUP_INDEX, TABLE_SHARE_GROUPS } from "./config"
 import { BackupKey, BackupEntity, ConfigEntity, ShareGroupEntity } from "./dbEntities"
 import { getItem, putItem, putBatch, indexQuery } from "./dynamoDB"
-import { MessageContent, useArgument } from "./botUtils"
+import { MessageContent } from "./botUtils"
 import { shuffle } from "./utils"
 import { InputMedia } from "node-telegram-bot-api"
 
-export const getContents = (result: BackupResult, args: string[], reposting = false): MessageContent[] => {
+export const getContents = (result: BackupResult, textDepth = 0, reposting = false): MessageContent[] => {
   const { reposted } = result
-  const isTextContent = useArgument(args, "text")
+  const isTextContent = textDepth > 0
   const contents = reposted.length > 0
-    ? reposted.map(x => getContents(x, args, true)).flat()
+    ? reposted.map(x => getContents(x, textDepth - 1, true)).flat()
     : []
   let content = reposting ? "转发自: " : ""
   let showPreview = true
   const pages = result.pages
   const medias: InputMedia[] = []
   const files: string[] = []
+  const sourceText = ` (<a href="${result.source}">source</a>)`
   if (isTextContent || pages.length === 0) {
     if (result.authorName !== undefined) {
       content += `@${result.authorName}: `
     }
     content += result.content
-    content += ` (<a href="${result.source}">source</a>)`
     for (const file of result.files) {
       const url = file.uploaded === undefined ? file.source : file.uploaded
       switch (file.type) {
@@ -57,11 +57,13 @@ export const getContents = (result: BackupResult, args: string[], reposting = fa
       content += `<a href="${page.url}">${page.title}</a>`
     })
   }
+  content += sourceText
   contents.push({
     text: content,
     medias,
     files,
     showPreview,
+    pageURLs: pages.map(x => x.url),
     parseMode: "HTML"
   })
   return contents

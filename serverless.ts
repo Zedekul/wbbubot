@@ -4,7 +4,8 @@ import main from "@functions/main"
 import webhook from "@functions/webhook"
 import {
   AWS_ACCOUNT_ID,
-  BOT_TOKEN, PRODUCTION_MODE, SHARE_GROUP_INDEX, SQS_QUEUE_NAME,
+  BOT_DOCS_URL,
+  BOT_TOKEN, BOT_USERNAME, PRODUCTION_MODE, SHARE_GROUP_INDEX, SQS_QUEUE_NAME,
   TABLE_BACKUPS, TABLE_CONFIGS, TABLE_SHARE_GROUPS
 } from "@libs/config"
 
@@ -36,13 +37,15 @@ const serverlessConfiguration: AWS = {
     environment: {
       AWS_ACCOUNT_ID,
       BOT_TOKEN,
+      BOT_DOCS_URL,
+      BOT_USERNAME,
       SQS_QUEUE_NAME,
       TABLE_CONFIGS,
       TABLE_BACKUPS,
       DEFAULT_TELEGRAPH_ACCOUNT_TOKEN,
       PRODUCTION_MODE: PRODUCTION_MODE ? "1" : "0",
       AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
-      NTBA_FIX_319: "1",
+      NTBA_FIX_319: process.env.NTBA_FIX_319,
       NODE_OPTIONS: "--enable-source-maps --stack-trace-limit=1000",
     },
     iam: {

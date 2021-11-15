@@ -17,3 +17,6 @@ export function* makeBatches<T>(arr: T[], batchSize: number): IterableIterator<T
     yield arr.slice(i, i + batchSize)
   }
 }
+
+const urlRegex = /^((http[s]?|ftp):\/)?\/?([^:\/\s]+)((\/\w+)*\/)([\w\-\.]+[^#?\s]+)(.*)?(#[\w\-]+)?$/
+export const isURL = (str: string): boolean => urlRegex.test(str)
