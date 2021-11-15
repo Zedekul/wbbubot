@@ -125,13 +125,13 @@ Cookie 设置地址：https://douban.com
 本 Bot 会为每个用户自动建立一个 Telegra.ph 帐号，用来发表转发的文章。如果你需要获取这个帐号的信息，使用这个命令：
 
 ```
-/telegraph-account
+/telegraph_account
 ```
 
 如果需要重新建立帐号请使用这个命令：
 
 ```
-/new-telegraph-account
+/new_telegraph_account
 ```
 
 ### 设置登录状态
@@ -169,7 +169,7 @@ Cookie 设置地址：https://douban.com
 有时候过大的图片和视频无法上传至 Telegra.ph 和 Telegram 的服务器，此时可以选用 AWS S3 作为备用存储平台，需要设置一个 S3 Bucket：
 
 ```
-/config-s3 {"accessPoint":"ACCESS_POINT_NAME","accountID":"ACCOUNT_ID","bucket":"BUCKET_NAME","region":"REGION"}
+/config_s3 {"accessPoint":"ACCESS_POINT_NAME","accountID":"ACCOUNT_ID","bucket":"BUCKET_NAME","region":"REGION"}
 ```
 
 必须提供如上的 JSON，四个属性缺一不可。Bucket 需要开启 Public Access 以允许外网访问。
@@ -179,9 +179,9 @@ Cookie 设置地址：https://douban.com
 如果想与朋友共享登录状态和 AWS S3 设置，可以使用以下命令创建或加入一个共享组：
 
 ```
-/create-share group_name password
+/create_share group_name password
 /share [group_name password]
-/stop-share group_name [password]
+/stop_share group_name [password]
 ```
 
 **（此功能之后可能会有更改）**

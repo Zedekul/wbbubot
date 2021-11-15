@@ -56,7 +56,7 @@ const onTelegraphAccountCommand: CommandHandler = async (bot, command, args, mes
   const userID = message.from.id
   const config = await getOrCreateConfig(userID)
   let text = ""
-  if (command === "/new-telegraph-account") {
+  if (command === "/new_telegraph_account") {
     config.telegraphAccount = await createAccount(userID.toString())
     await updateConfig(config)
     text = "Telegra.ph 帐号创建成功"
@@ -77,15 +77,17 @@ const onCookieCommand: CommandHandler = async (bot, _, args, message) => {
     ? new CookieJar()
     : await CookieJar.deserialize(config.cookies)
   const url = args.shift()
-  const cookies = args.join("").split(/;/)
-  if (cookies.length === 0) {
+  if (args.length === 0) {
     const cookie = await cookieJar.getCookieString(url)
     if (!cookie) {
       throw new DedeletedError(`没有找到对应的 Cookie: ${url}`)
     } else {
-      await reply(bot, message, `当前在 ${url} 上的 Cookie 为: ${cookie}`)
+      await reply(bot, message, `当前在 ${url} 上的 Cookie 为:\n${cookie}`, false, {
+        disable_web_page_preview: true
+      })
     }
   } else {
+    const cookies = args.join("").split(/;/)
     for (const cookie of cookies) {
       await cookieJar.setCookie(cookie, url)
     }
@@ -94,7 +96,7 @@ const onCookieCommand: CommandHandler = async (bot, _, args, message) => {
   }
 }
 
-const configS3CommandUsage = "/config-s3 {\"accessPoint\":\"ACCESS_POINT_NAME\""
+const configS3CommandUsage = "/config_s3 {\"accessPoint\":\"ACCESS_POINT_NAME\""
   + ",\"accountID\":\"ACCOUNT_ID\",\"bucket\":\"BUCKET_NAME\",\"region\":\"REGION\"}"
 const onConfigS3Command: CommandHandler = async (bot, _, args, message) => {
   try {
@@ -119,16 +121,16 @@ const onConfigS3Command: CommandHandler = async (bot, _, args, message) => {
 
 const GroupNameRegex = /^[a-zA-Z0-9_]+$/
 const PasswordRegex = /^[a-zA-Z0-9#?!@$%^&*-]+$/
-const createShareCommandUsage = "/create-share group_name password"
+const createShareCommandUsage = "/create_share group_name password"
 const shareCommandUsage = "/share [group_name password]"
-const stopShareCommandUsage = "/stop-share group_name [password]"
+const stopShareCommandUsage = "/stop_share group_name [password]"
 const onShareCommand: CommandHandler = async (bot, command, args, message) => {
   const userID = message.from.id
   const config = await getOrCreateConfig(userID)
   const argc = args.length
   const currentGroup = config.shareGroup
   const hasGroup = currentGroup !== undefined
-  if (command === "/stop-share") {
+  if (command === "/stop_share") {
     if (config.isOwner && argc !== 2 || !config.isOwner && argc !== 1) {
       throwUsage(stopShareCommandUsage)
     }
@@ -153,7 +155,7 @@ const onShareCommand: CommandHandler = async (bot, command, args, message) => {
     await reply(bot, message, `已退出共享组 ${currentGroup}`)
     return
   }
-  const isCreating = command === "/create-share"
+  const isCreating = command === "/create_share"
   if (!isCreating && argc === 0) {
     await reply(bot, message, hasGroup
       ? `当前共享组为: ${currentGroup}`
@@ -219,7 +221,12 @@ export const onCommand = async (bot: TelegramBot, message: Message): Promise<voi
     const msg = message as MessageWithFromAndText
     let [command, ...args] = msg.text
       .trim().split(/\s+/)
-    command = command.replace(`@${BOT_USERNAME}`, "")
+    if (message.chat.type !== "private") {
+      if (!command.endsWith(`@${BOT_USERNAME}`)) {
+        return
+      }
+      command = command.substr(0, command.length - 1 - BOT_USERNAME.length)
+    }
     if (command.startsWith("/")) {
       if (command === "/start" || command === "/help") {
         await onStartCommand(bot, command, args, msg)
@@ -235,18 +242,19 @@ export const onCommand = async (bot: TelegramBot, message: Message): Promise<voi
         return
       }
       switch (command) {
-        case "/telegraph-account":
-        case "/new-telegraph-account":
+        case "/telegraph_account":
+        case "/new_telegraph_account":
           await onTelegraphAccountCommand(bot, command, args, msg)
           break
         case "/cookie":
           await onCookieCommand(bot, command, args, msg)
           break
-        case "/config-s3":
+        case "/config_s3":
           await onConfigS3Command(bot, command, args, msg)
           break
-        case "/create-share":
+        case "/create_share":
         case "/share":
+        case "/stop_share":
           await onShareCommand(bot, command, args, msg)
           break
         default:
