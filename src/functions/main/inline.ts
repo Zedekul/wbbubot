@@ -39,7 +39,7 @@ export const prepareResultInlined = async (result: BackupResult): Promise<Inline
   let contents = getContents(result, 10000)
   let textContent = contents.map(x => x.text).join("\n")
   if (parseHTML(textContent).structuredText.length > 4000) {
-    contents = getContents(result, 1)
+    contents = getContents(result, 1, true)
     textContent = contents.map(x => x.text).join("\n")
   }
   const medias = contents.map(x => x.medias).flat()

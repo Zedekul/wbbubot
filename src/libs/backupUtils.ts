@@ -21,12 +21,15 @@ export const getInlineKeyboardMarkup = (result: BackupResult, showAll = true): I
 }
 
 export const getContents = (
-  result: BackupResult, textDepth = 0, reposting = false
+  result: BackupResult,
+  textDepth = 0,
+  forcePage = false,
+  reposting = false
 ): MessageContent[] => {
   const { reposted } = result
-  const isTextContent = textDepth > 0
+  const isTextContent = textDepth > 0 || !forcePage && result.content.length < 300
   const contents = reposted.length > 0
-    ? reposted.map(x => getContents(x, textDepth - 1, true)).flat()
+    ? reposted.map(x => getContents(x, --textDepth, forcePage, true)).flat()
     : []
   let content = reposting ? "转发自: " : ""
   let showPreview = true

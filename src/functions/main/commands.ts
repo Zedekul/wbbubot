@@ -225,8 +225,8 @@ export const onCommand = async (bot: TelegramBot, message: Message): Promise<voi
       if (!command.endsWith(`@${BOT_USERNAME}`)) {
         return
       }
-      command = command.substr(0, command.length - 1 - BOT_USERNAME.length)
     }
+    command = command.replace(`@${BOT_USERNAME}`, "")
     if (command.startsWith("/")) {
       if (command === "/start" || command === "/help") {
         await onStartCommand(bot, command, args, msg)
