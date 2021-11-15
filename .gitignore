@@ -1,0 +1,8 @@
+node_modules
+lib/
+build/
+*.swp
+*.bak
+/.env
+.esbuild/
+.serverless/
