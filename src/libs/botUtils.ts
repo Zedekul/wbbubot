@@ -1,10 +1,12 @@
 import { PRODUCTION_MODE } from "./config"
 
+const { TextNode } = require("node-html-parser")
+import parseHTML, { HTMLElement, Node } from "node-html-parser"
+
 const TelegramBotConstructor = require("node-telegram-bot-api")
-
 import type * as TelegramBot from "node-telegram-bot-api"
-
 import { Message, SendMessageOptions, Update } from "node-telegram-bot-api"
+
 import { makeBatches } from "./utils"
 
 export type UpdateType = Exclude<keyof Update, "update_id">
@@ -123,4 +125,42 @@ export const sendContent = async (
     }))
   }
   return results
+}
+
+const SupportedTagNames = [
+  "b", "strong",
+  "i", "em",
+  "u", "ins",
+  "s", "strike", "del",
+  "a",
+  "pre", "code",
+]
+export const removeUnsupportedTagsNode = (node: Node): Node | undefined => {
+  if (node.nodeType === 3) {
+    return node
+  } else if (node.nodeType !== 1) {
+    return undefined
+  }
+  const element = node as HTMLElement
+  const tag = element.tagName ? element.tagName.toLowerCase() : null
+  if (tag === null || SupportedTagNames.includes(tag)) {
+  } else if (tag === "img" || tag === "video") {
+    let alt = element.getAttribute("alt")
+    if (alt === null) {
+      alt = tag === "img" ? "图片" : "视频"
+    }
+    return new TextNode(`[${alt}]`, node.parentNode)
+  } else if (tag === "br") {
+    return new TextNode("\n", node.parentNode)
+  } else {
+    element.rawTagName = undefined
+    element.childNodes.push(new TextNode("\n", element))
+  }
+  element.childNodes = node.childNodes.map(removeUnsupportedTagsNode).filter(x => x !== undefined)
+  return element
+}
+export const removeUnsupportedTags = (text: string): string => {
+  const root = parseHTML(text)
+  const processed = removeUnsupportedTagsNode(root)
+  return processed === undefined ? "" : (processed as HTMLElement).outerHTML
 }

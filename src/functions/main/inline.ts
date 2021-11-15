@@ -25,7 +25,7 @@ export const prepareResultPages = async (result: BackupResult): Promise<InlineQu
     const current = contents.pop()
     text += current.text
     if (contents.length > 0) {
-      text += "<br>"
+      text += "\n"
     }
   }
   return {
@@ -45,10 +45,10 @@ export const prepareResultInlined = async (result: BackupResult): Promise<Inline
   const page0 = result.pages[0]
   const replyMarkup = getInlineKeyboardMarkup(result)
   let contents = getContents(result, 10000)
-  let textContent = contents.map(x => x.text).join("<br>")
+  let textContent = contents.map(x => x.text).join("\n")
   if (parseHTML(textContent).structuredText.length > 4000) {
     contents = getContents(result, 1)
-    textContent = contents.map(x => x.text).join("<br>")
+    textContent = contents.map(x => x.text).join("\n")
   }
   const medias = contents.map(x => x.medias).flat()
   const files = contents.map(x => x.files).flat()

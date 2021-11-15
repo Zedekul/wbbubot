@@ -5,7 +5,7 @@ import { BackupResult, BackupOptions, createAccount } from "dedeleted"
 import { TABLE_BACKUPS, TABLE_CONFIGS, SHARE_GROUP_INDEX, TABLE_SHARE_GROUPS } from "./config"
 import { BackupKey, BackupEntity, ConfigEntity, ShareGroupEntity } from "./dbEntities"
 import { getItem, putItem, putBatch, indexQuery } from "./dynamoDB"
-import { MessageContent } from "./botUtils"
+import { MessageContent, removeUnsupportedTags } from "./botUtils"
 import { shuffle } from "./utils"
 import { InputMedia } from "node-telegram-bot-api"
 
@@ -25,7 +25,7 @@ export const getContents = (result: BackupResult, textDepth = 0, reposting = fal
     if (result.authorName !== undefined) {
       content += `@${result.authorName}: `
     }
-    content += result.content
+    content += removeUnsupportedTags(result.content)
     for (const file of result.files) {
       const url = file.uploaded === undefined ? file.source : file.uploaded
       switch (file.type) {
