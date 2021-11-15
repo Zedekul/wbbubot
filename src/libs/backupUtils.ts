@@ -3,7 +3,12 @@ import { CookieJar } from "tough-cookie"
 
 import { BackupResult, BackupOptions, createAccount } from "dedeleted"
 
-import { TABLE_BACKUPS, TABLE_CONFIGS, SHARE_GROUP_INDEX, TABLE_SHARE_GROUPS, S3_DEFAULT } from "./config"
+import {
+  BOT_USERNAME,
+  TABLE_BACKUPS, TABLE_CONFIGS, TABLE_SHARE_GROUPS,
+  SHARE_GROUP_INDEX,
+  S3_DEFAULT
+} from "./config"
 import { BackupKey, BackupEntity, ConfigEntity, ShareGroupEntity } from "./dbEntities"
 import { getItem, putItem, putBatch, indexQuery } from "./dynamoDB"
 import { MessageContent, removeUnsupportedTags, useArgument } from "./botUtils"
@@ -27,7 +32,7 @@ export const getContents = (
   reposting = false
 ): MessageContent[] => {
   const { reposted } = result
-  const isTextContent = textDepth > 0 || !forcePage && result.content.length < 300
+  const isTextContent = textDepth > 0 || !forcePage && result.content.length < 600
   const contents = reposted.length > 0
     ? reposted.map(x => getContents(x, --textDepth, forcePage, true)).flat()
     : []
