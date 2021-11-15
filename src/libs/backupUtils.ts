@@ -1,15 +1,28 @@
+import { InlineKeyboardButton, InlineKeyboardMarkup, InputMedia } from "node-telegram-bot-api"
 import { CookieJar } from "tough-cookie"
 
 import { BackupResult, BackupOptions, createAccount } from "dedeleted"
 
-import { TABLE_BACKUPS, TABLE_CONFIGS, SHARE_GROUP_INDEX, TABLE_SHARE_GROUPS } from "./config"
+import { TABLE_BACKUPS, TABLE_CONFIGS, SHARE_GROUP_INDEX, TABLE_SHARE_GROUPS, S3_DEFAULT } from "./config"
 import { BackupKey, BackupEntity, ConfigEntity, ShareGroupEntity } from "./dbEntities"
 import { getItem, putItem, putBatch, indexQuery } from "./dynamoDB"
-import { MessageContent, removeUnsupportedTags } from "./botUtils"
+import { MessageContent, removeUnsupportedTags, useArgument } from "./botUtils"
 import { shuffle } from "./utils"
-import { InputMedia } from "node-telegram-bot-api"
 
-export const getContents = (result: BackupResult, textDepth = 0, reposting = false): MessageContent[] => {
+export const getInlineKeyboardMarkup = (result: BackupResult, showAll = true): InlineKeyboardMarkup => {
+  const buttons: InlineKeyboardButton[] = [{ text: "查看存档", url: result.pages[0].url }]
+  if (showAll && (result.reposted.length > 0 || result.pages.length > 1)) {
+    buttons.push({ text: "全部存档", url: `https://t.me/${BOT_USERNAME}?start=${result.sourceKey}-${result.id}` })
+  }
+  buttons.push({ text: "查看原文", url: result.source })
+  return {
+    inline_keyboard: [buttons]
+  }
+}
+
+export const getContents = (
+  result: BackupResult, textDepth = 0, reposting = false
+): MessageContent[] => {
   const { reposted } = result
   const isTextContent = textDepth > 0
   const contents = reposted.length > 0
@@ -20,7 +33,6 @@ export const getContents = (result: BackupResult, textDepth = 0, reposting = fal
   const pages = result.pages
   const medias: InputMedia[] = []
   const files: string[] = []
-  const sourceText = ` (<a href="${result.source}">source</a>)`
   if (isTextContent || pages.length === 0) {
     if (result.authorName !== undefined) {
       content += `@${result.authorName}: `
@@ -57,14 +69,14 @@ export const getContents = (result: BackupResult, textDepth = 0, reposting = fal
       content += `<a href="${page.url}">${page.title}</a>`
     })
   }
-  content += sourceText
   contents.push({
     text: content,
     medias,
     files,
     showPreview,
     pageURLs: pages.map(x => x.url),
-    parseMode: "HTML"
+    parseMode: "HTML",
+    replyMarkup: isTextContent ? getInlineKeyboardMarkup(result, false) : undefined
   })
   return contents
 }
@@ -86,20 +98,26 @@ export const getDefaultOptions = (): Partial<BackupOptions> => ({
   checkExisting: (sourceKey, id) => getExistingBackup({ sourceKey, id })
 })
 
-export const getConfig = async (userID: number): Promise<ConfigEntity> => {
-  const config = await getItem<ConfigEntity>(
+export const getConfig = async (userID: number): Promise<ConfigEntity | undefined> => 
+  await getItem<ConfigEntity>(
     TABLE_CONFIGS, { userID }
-  ) || await updateConfig({
+  )
+
+export const getOrCreateConfig = async (userID: number): Promise<ConfigEntity> => {
+  const config = await getConfig(userID) || await updateConfig({
     userID,
     telegraphAccount: await createAccount(userID.toString())
   })
   return config
 }
 
-export const getOptions = async (config: ConfigEntity): Promise<Partial<BackupOptions>> => {
+export const getOptions = async (config: ConfigEntity, args: string[] = []): Promise<Partial<BackupOptions>> => {
   const options = getDefaultOptions()
   options.telegraphAccount = config.telegraphAccount
   await setSharableOptions(options, config)
+  if (useArgument(args, "force")) {
+    options.force = true
+  }
   return options
 }
 
@@ -160,6 +178,9 @@ const setSharableOptions = async (
     if (c.awsS3 !== undefined && options.awsS3Settings === undefined) {
       options.awsS3Settings = c.awsS3
     }
+  }
+  if (options.awsS3Settings === undefined) {
+    options.awsS3Settings = S3_DEFAULT
   }
   options.getCookie = async (url) => {
     for (const cookieJar of cookieJars) {

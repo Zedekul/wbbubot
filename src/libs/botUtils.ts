@@ -5,7 +5,7 @@ import parseHTML, { HTMLElement, Node } from "node-html-parser"
 
 const TelegramBotConstructor = require("node-telegram-bot-api")
 import type * as TelegramBot from "node-telegram-bot-api"
-import { Message, SendMessageOptions, Update } from "node-telegram-bot-api"
+import { InlineKeyboardMarkup, Message, SendMessageOptions, Update } from "node-telegram-bot-api"
 
 import { makeBatches } from "./utils"
 
@@ -68,7 +68,8 @@ export interface MessageContent {
   files: string[],
   showPreview: boolean,
   pageURLs: string[],
-  parseMode?: "HTML" | "Markdown"
+  parseMode?: "HTML" | "Markdown",
+  replyMarkup?: InlineKeyboardMarkup
 }
 
 export const sendContent = async (
@@ -76,10 +77,11 @@ export const sendContent = async (
   content: MessageContent
 ): Promise<Message[]> => {
   const results: Message[] = []
-  const { text, medias, showPreview } = content
+  const { text, medias, showPreview, replyMarkup } = content
   const options: SendMessageOptions = {
     parse_mode: content.parseMode === undefined ? "Markdown" : "HTML",
-    disable_web_page_preview: !showPreview
+    disable_web_page_preview: !showPreview,
+    reply_markup: replyMarkup
   }
   const nMedia = medias.length
   if (nMedia === 1) {
@@ -146,7 +148,7 @@ export const removeUnsupportedTagsNode = (node: Node): Node | undefined => {
   if (tag === null || SupportedTagNames.includes(tag)) {
   } else if (tag === "img" || tag === "video") {
     let alt = element.getAttribute("alt")
-    if (alt === null) {
+    if (alt === undefined) {
       alt = tag === "img" ? "图片" : "视频"
     }
     return new TextNode(`[${alt}]`, node.parentNode)

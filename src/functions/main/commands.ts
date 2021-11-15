@@ -6,7 +6,7 @@ import { CookieJar } from "tough-cookie"
 
 import { backup, AWSS3Settings, DedeletedError, InvalidFormat, createAccount, getAccountInfo } from "dedeleted"
 
-import { getConfig, getContents, getExistingBackup, getOptions, getShareGroup, getShareGroupConfigs, saveResult, updateConfig, updateShareGroup } from "@libs/backupUtils"
+import { getOrCreateConfig, getContents, getExistingBackup, getOptions, getShareGroup, getShareGroupConfigs, saveResult, updateConfig, updateShareGroup } from "@libs/backupUtils"
 import { reply, sendContent, useArgument } from "@libs/botUtils"
 import { BOT_DOCS_URL, BOT_USERNAME, TABLE_CONFIGS, TABLE_SHARE_GROUPS } from "@libs/config"
 import { hashPassword } from "@libs/utils"
@@ -26,7 +26,7 @@ type CommandHandler = (
 const throwUsage = (usage: string): never => { throw new InvalidFormat(`使用方法为 \`${usage}\``) }
 
 const onStartCommand: CommandHandler = async (bot, _, args, message) => {
-  if (args.length === 1) {
+  if (args.length === 1 && args[0] !== "start") {
     const tmp = args[0].split("-")
     const sourceKey = tmp.shift()
     const id = tmp.join("-")
@@ -40,7 +40,7 @@ const onStartCommand: CommandHandler = async (bot, _, args, message) => {
     }
     return
   }
-  await getConfig(message.from.id)
+  await getOrCreateConfig(message.from.id)
   const text = `使用 \`@${BOT_USERNAME} url\` 存档一个页面\n更多说明与高级设置请参照 ${BOT_DOCS_URL}`
   await reply(bot, message, text)
 }
@@ -51,15 +51,14 @@ const onTelegraphAccountCommand: CommandHandler = async (bot, command, args, mes
     throwUsage(telegraphAccountCommandUsage(command))
   }
   const userID = message.from.id
-  const config = await getConfig(userID)
+  const config = await getOrCreateConfig(userID)
   let text = ""
   if (command === "/new-telegraph-account") {
     config.telegraphAccount = await createAccount(userID.toString())
     text = "Telegra.ph 帐号创建成功"
   } else {
     const info = await getAccountInfo(config.telegraphAccount.access_token)
-    text = `当前 Telegra.ph 帐号信息：\n\n- 发表数量: ${info.page_count
-      }`
+    text = `当前 Telegra.ph 帐号信息：\n\n- 发表数量: ${info.page_count}`
   }
   await reply(bot, message, text)
 }
@@ -69,7 +68,7 @@ const onCookieCommand: CommandHandler = async (bot, _, args, message) => {
   if (args.length < 1 || args.length > 2) {
     throwUsage(cookieCommandUsage)
   }
-  const config = await getConfig(message.from.id)
+  const config = await getOrCreateConfig(message.from.id)
   const cookieJar = config.cookies === undefined
     ? new CookieJar()
     : await CookieJar.deserialize(config.cookies)
@@ -100,7 +99,7 @@ const onConfigS3Command: CommandHandler = async (bot, _, args, message) => {
       delete input[key]
     }
     assert(Object.keys(input).length === 0)
-    const config = await getConfig(message.from.id)
+    const config = await getOrCreateConfig(message.from.id)
     const isCreating = config.awsS3 === undefined
     config.awsS3 = result as AWSS3Settings
     await updateConfig(config)
@@ -117,7 +116,7 @@ const shareCommandUsage = "/share [group_name password]"
 const stopShareCommandUsage = "/stop-share group_name [password]"
 const onShareCommand: CommandHandler = async (bot, command, args, message) => {
   const userID = message.from.id
-  const config = await getConfig(userID)
+  const config = await getOrCreateConfig(userID)
   const argc = args.length
   const currentGroup = config.shareGroup
   const hasGroup = currentGroup !== undefined
@@ -183,8 +182,8 @@ const onShareCommand: CommandHandler = async (bot, command, args, message) => {
 }
 
 const onOther: CommandHandler = async (bot, url, args, message) => {
-  const config = await getConfig(message.from.id)
-  const options = await getOptions(config)
+  const config = await getOrCreateConfig(message.from.id)
+  const options = await getOptions(config, args)
   const result = await backup(url, options)
   if (result.justCreated) {
     delete result.justCreated
@@ -207,7 +206,9 @@ export const onCommand = async (bot: TelegramBot, message: Message): Promise<voi
       return
     }
     const msg = message as MessageWithFromAndText
-    const [command, ...args] = msg.text.trim().split(/\s+/)
+    let [command, ...args] = msg.text
+      .trim().split(/\s+/)
+    command = command.replace(`@${BOT_USERNAME}`, "")
     if (command.startsWith("/")) {
       if (command === "/start" || command === "/help") {
         await onStartCommand(bot, command, args, msg)
@@ -236,6 +237,9 @@ export const onCommand = async (bot: TelegramBot, message: Message): Promise<voi
           break
       }
     } else {
+      if (command === "") {
+        command = args.shift()
+      }
       await onOther(bot, command, args, msg)
     }
   } catch (e) {

@@ -5,7 +5,7 @@ import webhook from "@functions/webhook"
 import {
   AWS_ACCOUNT_ID,
   BOT_DOCS_URL,
-  BOT_TOKEN, BOT_USERNAME, PRODUCTION_MODE, SHARE_GROUP_INDEX, SQS_QUEUE_NAME,
+  BOT_TOKEN, BOT_USERNAME, PRODUCTION_MODE, S3_DEFAULT_ACCESS_POINT, S3_DEFAULT_BUCKET, SHARE_GROUP_INDEX, SQS_QUEUE_NAME,
   TABLE_BACKUPS, TABLE_CONFIGS, TABLE_SHARE_GROUPS, VIDEO_DEFAULT_THUMB
 } from "@libs/config"
 
@@ -36,15 +36,22 @@ const serverlessConfiguration: AWS = {
       shouldStartNameWithService: true,
     },
     environment: {
+      DEFAULT_TELEGRAPH_ACCOUNT_TOKEN,
+
       AWS_ACCOUNT_ID,
       BOT_TOKEN,
+      VIDEO_DEFAULT_THUMB,
+
+      SQS_QUEUE_NAME,
+      TABLE_BACKUPS,
+      TABLE_CONFIGS,
+      TABLE_SHARE_GROUPS,
+      S3_DEFAULT_BUCKET,
+      S3_DEFAULT_ACCESS_POINT,
+
       BOT_DOCS_URL,
       BOT_USERNAME,
-      SQS_QUEUE_NAME,
-      TABLE_CONFIGS,
-      TABLE_BACKUPS,
-      DEFAULT_TELEGRAPH_ACCOUNT_TOKEN,
-      VIDEO_DEFAULT_THUMB,
+
       PRODUCTION_MODE: PRODUCTION_MODE ? "1" : "0",
       AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
       NTBA_FIX_319: process.env.NTBA_FIX_319,
@@ -164,6 +171,26 @@ const serverlessConfiguration: AWS = {
           TableName: TABLE_SHARE_GROUPS
         }
       },
+      S3BucketFiles: {
+        Type: "AWS::S3::Bucket",
+        DeletionPolicy: "Retain",
+        Properties: {
+          BucketName: S3_DEFAULT_BUCKET,
+          BucketEncryption: {
+            ServerSideEncryptionConfiguration: [
+              { ServerSideEncryptionByDefault: { SSEAlgorithm: "AES256" } }
+            ]
+          },
+          AccessControl: "PublicRead"
+        }
+      },
+      S3AccessPoint: {
+        Type: "AWS::S3::AccessPoint",
+        Properties: {
+          Bucket: S3_DEFAULT_BUCKET,
+          Name: S3_DEFAULT_ACCESS_POINT
+        }
+      }
     }
   },
   custom: {

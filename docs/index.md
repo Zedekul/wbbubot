@@ -28,9 +28,9 @@ WbbuBot 是个 [Inline Bot](https://core.telegram.org/bots/inline)，可以直�
 
 注意：
 
-文字、图片和视频会被上传在 [Telegra.ph](https://telegra.ph) 上，但可能有大小限制（大约 50 MB）。
+文字、图片和视频会被上传在 [Telegra.ph](https://telegra.ph) 上，但有大小限制（大约 50 MB），超过限制的内容会被自动存在一个 AWS S3 bucket 上。
 
-可以设置一个 AWS S3 bucket 来存放超过大小限制的文件。（参见 [AWS S3 设置](#S3-setting)）
+用户也可以设置一个 AWS S3 bucket 来提供存放超过大小限制的文件。（参见 [AWS S3 设置](#S3-setting)）
 
 ### 已知问题
 
@@ -192,6 +192,10 @@ Cookie 设置地址：https://douban.com
 如果使用第二个命令时的参数为空，显示已经加入的共享组信息。
 
 创建者需要输入密码才能解散共享组。
+
+## 问题反馈
+
+请在 GitHub 的 Issues 区留言：[https://github.com/Zedekul/wbbubot/issues](https://github.com/Zedekul/wbbubot/issues)
 
 ## 声明
 

@@ -1,20 +1,12 @@
 import parseHTML from "node-html-parser"
 import * as TelegramBot from "node-telegram-bot-api"
-import { InlineKeyboardMarkup, InlineQuery, InlineQueryResult, InlineQueryResultDocument, InlineQueryResultPhoto, InlineQueryResultVideo } from "node-telegram-bot-api"
+import { InlineQuery, InlineQueryResult, InlineQueryResultDocument, InlineQueryResultPhoto, InlineQueryResultVideo } from "node-telegram-bot-api"
 
-import { backup, BackupResult, DedeletedError, InvalidFormat } from "dedeleted"
+import { backup, BackupResult, DedeletedError } from "dedeleted"
 
-import { getConfig, getContents, getOptions, saveResult } from "@libs/backupUtils"
-import { BOT_USERNAME, VIDEO_DEFAULT_THUMB } from "@libs/config"
+import { getConfig, getContents, getInlineKeyboardMarkup, getOptions, saveResult } from "@libs/backupUtils"
+import { VIDEO_DEFAULT_THUMB } from "@libs/config"
 import { isURL } from "@libs/utils"
-
-const getInlineKeyboardMarkup = (result: BackupResult): InlineKeyboardMarkup => ({
-  inline_keyboard:[[
-    { text: "查看存档", url: result.pages[0].url },
-    { text: "全部存档", url: `https://t.me/${BOT_USERNAME}?start=${result.sourceKey}-${result.id}`},
-    { text: "查看原文", url: result.source }
-  ]]
-})
 
 export const prepareResultPages = async (result: BackupResult): Promise<InlineQueryResult> => {
   let text = ""
@@ -113,17 +105,22 @@ export const prepareResultInlined = async (result: BackupResult): Promise<Inline
 }
 
 export const onInlineQuery = async (bot: TelegramBot, query: InlineQuery): Promise<void> => {
+  const userID = query.from.id
   const { id, query: content } = query
-  const [url, ...rest] = content.trim().split(/\s+/)
+  const [url, ...args] = content.trim().split(/\s+/)
   try {
+    const config = await getConfig(userID)
+    if (config === undefined) {
+      await bot.answerInlineQuery(id, [], {
+        switch_pm_text: "开始使用",
+        switch_pm_parameter: "start"
+      })
+      return
+    }
     if (url === undefined || !isURL(url)) {
       return
     }
-    if (rest.length > 0) {
-      throw new InvalidFormat("一次只能输入一个地址")
-    }
-    const config = await getConfig(query.from.id)
-    const options = await getOptions(config)
+    const options = await getOptions(config, args)
     const result = await backup(url, options)
     if (result.justCreated) {
       delete result.justCreated
