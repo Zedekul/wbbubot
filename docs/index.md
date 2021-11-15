@@ -142,7 +142,7 @@ Cookie 设置地址：https://douban.com
 /cookie url [cookie_string]
 ```
 
-`url` 为指定网站的地址，`cookie_string` 为 Cookie 的内容。
+`url` 为指定网站的地址（如`https://m.weibo.cn`），`cookie_string` 为 Cookie 的内容。
 
 如果不提供 `cookie_string`，则表示显示在该网站的当前登录状态。
 
@@ -150,12 +150,10 @@ Cookie 设置地址：https://douban.com
 
 首先在浏览器中登录目标网站。建议使用隐私模式开一个新的窗口，这可以保证登录状态不会与在浏览器中已经登录的帐号冲突。
 
-- 微博请在手机版网站登录：[https://m.weibo.cn](https://m.weibo.cn)
-- 知乎在主页登录即可：[https://www.zhihu.com](https://www.zhihu.com)
+以 Chrome 登录微博为例，获取 Cookie 的步骤：
 
-以 Chrome 为例，获取 Cookie 的步骤：
-
-- 在登录后再次访问上述链接。
+- 在 https://m.weibo.cn 进行登录
+- 在登录后重新访问上述链接。
 - 使用 `Ctrl+Shift+I` 打开开发者工具窗口，切换到 Network 选项卡。
 - 刷新页面，在开发者工具中找到 Name 为当前网址的那一行（通常为第一项），单击选中。
 - 在详细信息中找到 `Request Headers`，复制 `cookie: ` 之后的全部内容（如下图），即为上述的 `cookie_values`。

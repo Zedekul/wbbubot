@@ -58,6 +58,7 @@ const onTelegraphAccountCommand: CommandHandler = async (bot, command, args, mes
   let text = ""
   if (command === "/new-telegraph-account") {
     config.telegraphAccount = await createAccount(userID.toString())
+    await updateConfig(config)
     text = "Telegra.ph 帐号创建成功"
   } else {
     const info = await getAccountInfo(config.telegraphAccount.access_token)
@@ -68,15 +69,16 @@ const onTelegraphAccountCommand: CommandHandler = async (bot, command, args, mes
 
 const cookieCommandUsage = "/cookie url [cookie_string]"
 const onCookieCommand: CommandHandler = async (bot, _, args, message) => {
-  if (args.length < 1 || args.length > 2) {
+  if (args.length < 1) {
     throwUsage(cookieCommandUsage)
   }
   const config = await getOrCreateConfig(message.from.id)
   const cookieJar = config.cookies === undefined
     ? new CookieJar()
     : await CookieJar.deserialize(config.cookies)
-  const [url, cookieString] = args
-  if (cookieString === undefined) {
+  const url = args.shift()
+  const cookies = args.join("").split(/;/)
+  if (cookies.length === 0) {
     const cookie = await cookieJar.getCookieString(url)
     if (!cookie) {
       throw new DedeletedError(`没有找到对应的 Cookie: ${url}`)
@@ -84,7 +86,10 @@ const onCookieCommand: CommandHandler = async (bot, _, args, message) => {
       await reply(bot, message, `当前在 ${url} 上的 Cookie 为: ${cookie}`)
     }
   } else {
-    await cookieJar.setCookie(cookieString, url)
+    for (const cookie of cookies) {
+      await cookieJar.setCookie(cookie, url)
+    }
+    await updateConfig({ ...config, cookies: await cookieJar.serialize() })
     await reply(bot, message, `Cookie 设置更新成功！`)
   }
 }
