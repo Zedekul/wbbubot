@@ -103,25 +103,10 @@ export const sendContent = async (
       }))
     }
   } else if (nMedia > 0) {
-    let caption = text
-    if (text.length > 1024) {
-      results.push(await bot.sendMessage(chatID, text, options))
-      caption = ""
-    }
     for (const batch of makeBatches(medias, 10)) {
-      results.push(await bot.sendMediaGroup(chatID, batch.map((media, i) => {
-        if (i === 0 && caption !== "") {
-          media.caption = caption
-          caption = ""
-          if (options.parse_mode !== undefined) {
-            media.parse_mode = options.parse_mode
-          }
-        }
-        return media
-      }), {
-        ...options
-      }))
+      results.push(await bot.sendMediaGroup(chatID, batch, options))
     }
+    results.push(await bot.sendMessage(chatID, text, options))
   } else {
     results.push(await bot.sendMessage(chatID, text, options))
   }
