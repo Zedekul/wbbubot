@@ -113,7 +113,8 @@ export const onInlineQuery = async (bot: TelegramBot, query: InlineQuery): Promi
     if (config === undefined) {
       await bot.answerInlineQuery(id, [], {
         switch_pm_text: "开始使用",
-        switch_pm_parameter: "start"
+        switch_pm_parameter: "start",
+        cache_time: 0
       })
       return
     }
