@@ -7,6 +7,7 @@ export const AWS_REGION = process.env.AWS_REGION
 export const BOT_TOKEN = process.env.BOT_TOKEN
 export const VIDEO_DEFAULT_THUMB = process.env.VIDEO_DEFAULT_THUMB
 
+export const TIMEOUT_TIME = parseFloat(process.env.TIMEOUT_TIME || "15") * 1000
 export const SQS_QUEUE_NAME = process.env.SQS_QUEUE_NAME || "Wbbu.fifo"
 export const TABLE_BACKUPS = process.env.TABLE_BACKUPS || "wbbu-backups"
 export const TABLE_CONFIGS = process.env.TABLE_CONFIGS || "wbbu-configs"

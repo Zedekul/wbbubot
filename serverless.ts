@@ -5,7 +5,10 @@ import webhook from "@functions/webhook"
 import {
   AWS_ACCOUNT_ID,
   BOT_DOCS_URL,
-  BOT_TOKEN, BOT_USERNAME, PRODUCTION_MODE, S3_DEFAULT_ACCESS_POINT, S3_DEFAULT_BUCKET, SHARE_GROUP_INDEX, SQS_QUEUE_NAME,
+  BOT_TOKEN, BOT_USERNAME,
+  PRODUCTION_MODE,
+  S3_DEFAULT_ACCESS_POINT, S3_DEFAULT_BUCKET,
+  SHARE_GROUP_INDEX, SQS_QUEUE_NAME,
   TABLE_BACKUPS, TABLE_CONFIGS, TABLE_SHARE_GROUPS, VIDEO_DEFAULT_THUMB
 } from "@libs/config"
 
@@ -42,6 +45,7 @@ const serverlessConfiguration: AWS = {
       BOT_TOKEN,
       VIDEO_DEFAULT_THUMB,
 
+      TIMEOUT_TIME: process.env.TIMEOUT_TIME,
       SQS_QUEUE_NAME,
       TABLE_BACKUPS,
       TABLE_CONFIGS,
@@ -138,7 +142,7 @@ const serverlessConfiguration: AWS = {
           },
           TableName: TABLE_CONFIGS,
           GlobalSecondaryIndexes: [
-            { 
+            {
               IndexName: SHARE_GROUP_INDEX,
               KeySchema: [
                 { AttributeName: "shareGroup", KeyType: "HASH" },

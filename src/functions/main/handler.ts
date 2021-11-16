@@ -5,8 +5,8 @@ import { Update } from "node-telegram-bot-api"
 import { DedeletedError } from "dedeleted"
 
 import { formatJSONResponse } from "@libs/apiGateway"
-import { getBot, getUpdateType } from "@libs/botUtils"
-import { BOT_TOKEN } from "@libs/config"
+import { getBot, getUpdateType, reply } from "@libs/botUtils"
+import { BOT_TOKEN, TIMEOUT_TIME } from "@libs/config"
 import { middyfy } from "@libs/lambda"
 
 import { onCommand } from "./commands"
@@ -16,6 +16,24 @@ import { onInlineQuery } from "./inline"
 const handleUpdate = async (bot: TelegramBot, update: TelegramBot.Update): Promise<void> => {
   const type = getUpdateType(update)
   const entity = update[type]
+  const timeout = setTimeout(async () => {
+    const text = "存档超时"
+    if (type === "message") {
+      await reply(bot, entity as TelegramBot.Message, text)
+    } else if (type === "inline_query") {
+      await bot.answerInlineQuery((entity as TelegramBot.InlineQuery).id, [{
+        type: "article",
+        id: "error",
+        title: text,
+        input_message_content: {
+          message_text: text
+        }
+      }], {
+        cache_time: 10
+      })
+    }
+  }, TIMEOUT_TIME)
+
   try {
     if (entity === undefined) {
       throw new Error(`Update type ${type} not found`)
@@ -30,6 +48,7 @@ const handleUpdate = async (bot: TelegramBot, update: TelegramBot.Update): Promi
       default:
         throw new Error(`Update type ${type} not supported`)
     }
+    clearTimeout(timeout)
   } catch (e) {
     if (!(e as DedeletedError).skipLogging) {
       console.error(e)
