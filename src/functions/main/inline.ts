@@ -51,18 +51,7 @@ export const prepareResultInlined = async (result: BackupResult): Promise<Inline
     shortText = shortText.substr(0, 50) + "..."
   }
   // MediaGroup is yet not supported by inline mode, so let user choose one.
-  const results: InlineQueryResult[] = [{
-    type: "article",
-    id: `${result.sourceKey}-${result.id}-text`,
-    title: `发送文字内容：${shortText}`,
-    url: page0.url,
-    input_message_content: {
-      message_text: textContent,
-      parse_mode: "HTML",
-      disable_web_page_preview: true
-    },
-    reply_markup: replyMarkup
-  }]
+  const results: InlineQueryResult[] = []
   const caption = text.length > 1000 ? text.substr(0, 1000) + "..." : textContent
   let i = 0
   for (const media of medias) {
@@ -101,6 +90,18 @@ export const prepareResultInlined = async (result: BackupResult): Promise<Inline
       reply_markup: replyMarkup
     } as unknown as InlineQueryResultDocument)
   }
+  results.push({
+    type: "article",
+    id: `${result.sourceKey}-${result.id}-text`,
+    title: `发送文字内容：${shortText}`,
+    url: page0.url,
+    input_message_content: {
+      message_text: textContent,
+      parse_mode: "HTML",
+      disable_web_page_preview: true
+    },
+    reply_markup: replyMarkup
+  })
   return results
 }
 
