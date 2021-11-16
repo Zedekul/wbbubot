@@ -213,11 +213,16 @@ const onOtherBackup: CommandHandler = async (bot, url, args, message) => {
 }
 
 export const onCommand = async (bot: TelegramBot, message: Message): Promise<void> => {
+  const viaBot = (message as unknown as { via_bot?: User }).via_bot
+  if (
+    message.text === undefined ||
+    message.from === undefined ||
+    viaBot !== undefined && viaBot.username === BOT_USERNAME
+  ) {
+    // Message skipped
+    return
+  }
   try {
-    if (message.text === undefined || message.from === undefined) {
-      // Message skipped
-      return
-    }
     const msg = message as MessageWithFromAndText
     let [command, ...args] = msg.text
       .trim().split(/\s+/)
