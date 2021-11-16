@@ -12,7 +12,7 @@ import {
 import { BackupKey, BackupEntity, ConfigEntity, ShareGroupEntity } from "./dbEntities"
 import { getItem, putItem, putBatch, indexQuery } from "./dynamoDB"
 import { MessageContent, removeUnsupportedTags, useArgument } from "./botUtils"
-import { shuffle } from "./utils"
+import { shuffle, shallowCopy } from "./utils"
 
 export const getInlineKeyboardMarkup = (result: BackupResult, showAll = true): InlineKeyboardMarkup => {
   const buttons: InlineKeyboardButton[] = [{ text: "查看存档", url: result.pages[0].url }]
@@ -150,8 +150,8 @@ export const saveResult = async (result: BackupResult): Promise<void> => {
       stack.push(x)
       reposted.push({ sourceKey, id })
     }
-    delete item.reposted
-    const entity = item as unknown as BackupEntity
+    const entity = shallowCopy(item) as unknown as BackupEntity
+    delete entity.reposted
     entity.otherData = JSON.stringify(item.otherData)
     entity.reposted = reposted
     resultBatch.push(entity)
