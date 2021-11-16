@@ -221,11 +221,7 @@ export const onCommand = async (bot: TelegramBot, message: Message): Promise<voi
     const msg = message as MessageWithFromAndText
     let [command, ...args] = msg.text
       .trim().split(/\s+/)
-    if (message.chat.type !== "private") {
-      if (!command.endsWith(`@${BOT_USERNAME}`)) {
-        return
-      }
-    }
+    const mentioned = command.endsWith(`@${BOT_USERNAME}`)
     command = command.replace(`@${BOT_USERNAME}`, "")
     if (command.startsWith("/")) {
       if (command === "/start" || command === "/help") {
@@ -238,7 +234,9 @@ export const onCommand = async (bot: TelegramBot, message: Message): Promise<voi
         return
       }
       if (msg.chat.type !== "private") {
-        await reply(bot, msg, "请用私信方式进行设置。")
+        if (mentioned) {
+          await reply(bot, msg, "请用私信方式进行设置。")
+        }
         return
       }
       switch (command) {
