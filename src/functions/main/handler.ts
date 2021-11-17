@@ -48,11 +48,12 @@ const handleUpdate = async (bot: TelegramBot, update: TelegramBot.Update): Promi
       default:
         throw new Error(`Update type ${type} not supported`)
     }
-    clearTimeout(timeout)
   } catch (e) {
     if (!(e as DedeletedError).skipLogging) {
       console.error(e)
     }
+  } finally {
+    clearTimeout(timeout)
   }
 }
 

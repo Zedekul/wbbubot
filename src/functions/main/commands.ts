@@ -212,14 +212,24 @@ const onOtherBackup: CommandHandler = async (bot, url, args, message) => {
   }
 }
 
-export const onCommand = async (bot: TelegramBot, message: Message): Promise<void> => {
+const shouldSkip = (message: Message): boolean => {
+  if (message.text === undefined || message.from === undefined) {
+    return true
+  }
   const viaBot = (message as unknown as { via_bot?: User }).via_bot
-  if (
-    message.text === undefined ||
-    message.from === undefined ||
-    viaBot !== undefined && viaBot.username === BOT_USERNAME
-  ) {
-    // Message skipped
+  if (viaBot !== undefined && viaBot.username === BOT_USERNAME) {
+    return true
+  }
+  const replyTo = message.reply_to_message
+  if (replyTo !== undefined && replyTo.from !== undefined && replyTo.from.username !== BOT_USERNAME) {
+    // Skip for replies to messages that were sent via this bot
+    return true
+  }
+  return false
+}
+
+export const onCommand = async (bot: TelegramBot, message: Message): Promise<void> => {
+  if (shouldSkip(message)) {
     return
   }
   try {
