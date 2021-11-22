@@ -11,7 +11,7 @@ import { isURL } from "@libs/utils"
 export const prepareResultPages = async (result: BackupResult): Promise<InlineQueryResult> => {
   let text = ""
   const page0 = result.pages[0]
-  const contents = getContents(result)
+  const contents = getContents(result, -1, true)
   // Need to go from up to down because the first page is instant-viewed
   while (contents.length > 0) {
     const current = contents.pop()
