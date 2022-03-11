@@ -6,6 +6,7 @@ import { backup, BackupResult, DedeletedError } from "dedeleted"
 import { getConfig, getContents, getInlineKeyboardMarkup, getOptions, saveResult } from "@libs/backupUtils"
 import { VIDEO_DEFAULT_THUMB } from "@libs/config"
 import { isURL, parseHTML } from "@libs/utils"
+import { removeUnsupportedTags } from "../../libs/botUtils"
 
 export const prepareResultPages = async (result: BackupResult): Promise<InlineQueryResult> => {
   let text = ""
@@ -44,6 +45,7 @@ export const prepareResultInlined = async (result: BackupResult): Promise<Inline
   const medias = contents.map(x => x.medias).flat()
   const files = contents.map(x => x.files).flat()
 
+  textContent = removeUnsupportedTags(textContent)
   const text = parseHTML(textContent).structuredText
   let shortText = text
   if (shortText.length > 50) {

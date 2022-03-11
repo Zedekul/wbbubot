@@ -206,7 +206,8 @@ const onOtherBackup: CommandHandler = async (bot, url, args, message) => {
   while (useArgument(args, "text")) {
     textDepth += 1
   }
-  const contents = getContents(result, textDepth)
+  const forcePage = useArgument(args, "page")
+  const contents = getContents(result, textDepth, forcePage)
   for (const content of contents) {
     await sendContent(bot, message.chat.id, content)
   }
