@@ -221,8 +221,11 @@ const shouldSkip = (message: Message): boolean => {
     return true
   }
   const replyTo = message.reply_to_message
-  if (replyTo !== undefined && replyTo.from !== undefined && replyTo.from.username !== BOT_USERNAME) {
+  if (replyTo !== undefined && replyTo.from !== undefined && (
+    replyTo.from.username !== BOT_USERNAME || !isURL(message.text)
+  )) {
     // Skip for replies to messages that were sent via this bot
+    // or replies that are not URLs
     return true
   }
   return false
