@@ -1,4 +1,3 @@
-import parseHTML from "node-html-parser"
 import * as TelegramBot from "node-telegram-bot-api"
 import { InlineQuery, InlineQueryResult, InlineQueryResultDocument, InlineQueryResultPhoto, InlineQueryResultVideo } from "node-telegram-bot-api"
 
@@ -6,7 +5,7 @@ import { backup, BackupResult, DedeletedError } from "dedeleted"
 
 import { getConfig, getContents, getInlineKeyboardMarkup, getOptions, saveResult } from "@libs/backupUtils"
 import { VIDEO_DEFAULT_THUMB } from "@libs/config"
-import { isURL } from "@libs/utils"
+import { isURL, parseHTML } from "@libs/utils"
 
 export const prepareResultPages = async (result: BackupResult): Promise<InlineQueryResult> => {
   let text = ""

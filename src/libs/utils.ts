@@ -1,3 +1,5 @@
+export const parseHTML = require("node-html-parser").default
+
 import { createHash } from "crypto"
 
 export const shuffle = <T>(arr: T[]): T[] => {

@@ -29,7 +29,7 @@ if (!SQS_QUEUE_NAME.endsWith(".fifo")) {
 
 const serverlessConfiguration: AWS = {
   service: "wbbu",
-  frameworkVersion: "2",
+  frameworkVersion: "3",
   plugins: ["serverless-esbuild"],
   provider: {
     name: "aws",

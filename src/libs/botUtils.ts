@@ -1,13 +1,12 @@
 import { PRODUCTION_MODE } from "./config"
 
-const { TextNode } = require("node-html-parser")
-import parseHTML, { HTMLElement, Node } from "node-html-parser"
+import { TextNode, HTMLElement, Node } from "node-html-parser"
 
 const TelegramBotConstructor = require("node-telegram-bot-api")
 import type * as TelegramBot from "node-telegram-bot-api"
 import { InlineKeyboardMarkup, Message, SendMessageOptions, Update } from "node-telegram-bot-api"
 
-import { makeBatches } from "./utils"
+import { parseHTML, makeBatches } from "./utils"
 
 export type UpdateType = Exclude<keyof Update, "update_id">
 
