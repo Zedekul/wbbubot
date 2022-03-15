@@ -82,11 +82,21 @@ const serverlessConfiguration: AWS = {
               "dynamodb:BatchWriteItem"
             ],
             Resource: "arn:aws:dynamodb:*:*:table/wbbu-*",
+          },
+          {
+            Effect: "Allow",
+            Action: [
+              "s3:PutObject"
+            ],
+            Resource: [
+              `arn:aws:s3:::${S3_DEFAULT_BUCKET}`,
+              `arn:aws:s3:::${S3_DEFAULT_BUCKET}/*`,
+              `arn:aws:s3:*:*:accesspoint/${S3_DEFAULT_ACCESS_POINT}/*`,
+            ]
           }
         ]
       }
-    },
-    lambdaHashingVersion: "20201221",
+    }
   },
   // import the function via paths
   functions: {
