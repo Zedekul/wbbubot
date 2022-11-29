@@ -9,6 +9,7 @@
 WbbuBot 是个 [Inline Bot](https://core.telegram.org/bots/inline)，可以直接通过下列方式使用：
 
 Inline 模式：
+
 ```
 @wbbubot url
 ```
@@ -27,13 +28,14 @@ Inline 模式：
 
 目前支持的平台和内容见下表：
 
-| 平台 | 免登录 | 可存档内容类型 | 暂不支持的内容 |
-|:---:|:---:|:---:|:---:|
-| [微博](#weibo) | ⍻ | 文字、图片、视频 | 头条文章 |
-| [知乎](#zhihu) | ⍻ | 回答、问题、专栏文章、想法 | 视频 |
-| [微信](#wechat) | ✓ | 公众号文章 | |
-| [豆瓣](#douban) | ✓ | 书评/影评、日记、广播、小组话题 | 短评 |
-| [任意链接](#other) | ⍻ | 网页（文字、图片、视频、文件） | |
+|        平台        | 免登录 |         可存档内容类型          | 暂不支持的内容 |
+| :----------------: | :----: | :-----------------------------: | :------------: |
+|   [微博](#weibo)   |   ⍻    |        文字、图片、视频         |    头条文章    |
+|   [知乎](#zhihu)   |   ⍻    |   回答、问题、专栏文章、想法    |      视频      |
+|  [微信](#wechat)   |   ✓    |           公众号文章            |                |
+|  [豆瓣](#douban)   |   ✓    | 书评/影评、日记、广播、小组话题 |      短评      |
+|  [推特](#twitter)  |   ⍻    |              推文               |                |
+| [任意链接](#other) |   ⍻    | 网页（文字、图片、视频、文件）  |                |
 
 注意：
 
@@ -87,7 +89,6 @@ Cookie 设置地址：https://zhihu.com
 
 无需登录。
 
-
 ### <a name="douban"></a> 豆瓣
 
 [豆瓣](https://www.douban.com)上各种内容，链接格式：
@@ -103,7 +104,15 @@ Cookie 设置地址：https://zhihu.com
 
 Cookie 设置地址：https://douban.com
 
-### <a name="media"></a> 任意媒体链接
+### <a name="twitter"></a> 推特
+
+[推特](https://twitter.com)上的推文，链接格式：
+
+```
+@wbbubot https://twitter.com/username/status/1234567890
+```
+
+### <a name="other"></a> 任意媒体链接
 
 任何无需登录即可访问的图片/视频的外网链接，例如
 
@@ -176,9 +185,17 @@ Cookie 设置地址：https://douban.com
 
 必须提供如上的 JSON，四个属性缺一不可。Bucket 需要开启 Public Access 以允许外网访问。
 
-### 共享登录状态与 AWS S3 设置
+### <a name="twitter-setting"></a>Twitter API 设置
 
-如果想与朋友共享登录状态和 AWS S3 设置，可以使用以下命令创建或加入一个共享组：
+可以用以下方式设置你的推特 API Bearer Token：
+
+```
+/config_twitter API_BEARER_TOKEN
+```
+
+### 共享登录状态与 AWS S3 等设置
+
+如果想与朋友共享登录状态和 AWS S3 等设置，可以使用以下命令创建或加入一个共享组：
 
 ```
 /create_share group_name password
