@@ -12,7 +12,6 @@ import { middyfy } from "@libs/lambda"
 import { onCommand } from "./commands"
 import { onInlineQuery } from "./inline"
 
-
 const handleUpdate = async (bot: TelegramBot, update: TelegramBot.Update): Promise<void> => {
   const type = getUpdateType(update)
   const entity = update[type]
@@ -21,16 +20,22 @@ const handleUpdate = async (bot: TelegramBot, update: TelegramBot.Update): Promi
     if (type === "message") {
       await reply(bot, entity as TelegramBot.Message, text)
     } else if (type === "inline_query") {
-      await bot.answerInlineQuery((entity as TelegramBot.InlineQuery).id, [{
-        type: "article",
-        id: "error",
-        title: text,
-        input_message_content: {
-          message_text: text
+      await bot.answerInlineQuery(
+        (entity as TelegramBot.InlineQuery).id,
+        [
+          {
+            type: "article",
+            id: "error",
+            title: text,
+            input_message_content: {
+              message_text: text,
+            },
+          },
+        ],
+        {
+          cache_time: 10,
         }
-      }], {
-        cache_time: 10
-      })
+      )
     }
   }, TIMEOUT_TIME)
 
@@ -59,10 +64,12 @@ const handleUpdate = async (bot: TelegramBot, update: TelegramBot.Update): Promi
 
 const webhook: Handler<{ Records: SQSRecord[] }> = async (event) => {
   const bot = getBot(BOT_TOKEN)
-  await Promise.all(event.Records.map(async (record) => {
-    const update = JSON.parse(record.body) as Update
-    await handleUpdate(bot, update)
-  }))
+  await Promise.all(
+    event.Records.map(async (record) => {
+      const update = JSON.parse(record.body) as Update
+      await handleUpdate(bot, update)
+    })
+  )
   return formatJSONResponse()
 }
 

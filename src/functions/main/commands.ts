@@ -4,16 +4,34 @@ import * as TelegramBot from "node-telegram-bot-api"
 import { Message, User } from "node-telegram-bot-api"
 import { CookieJar } from "tough-cookie"
 
-import { backup, AWSS3Settings, DedeletedError, InvalidFormat, createAccount, getAccountInfo, BackupResult } from "dedeleted"
+import {
+  backup,
+  AWSS3Settings,
+  DedeletedError,
+  InvalidFormat,
+  createAccount,
+  getAccountInfo,
+  BackupResult,
+} from "dedeleted"
 
-import { getOrCreateConfig, getContents, getExistingBackup, getOptions, getShareGroup, getShareGroupConfigs, saveResult, updateConfig, updateShareGroup } from "@libs/backupUtils"
+import {
+  getOrCreateConfig,
+  getContents,
+  getExistingBackup,
+  getOptions,
+  getShareGroup,
+  getShareGroupConfigs,
+  saveResult,
+  updateConfig,
+  updateShareGroup,
+} from "@libs/backupUtils"
 import { reply, sendContent, useArgument } from "@libs/botUtils"
 import { BOT_DOCS_URL, BOT_USERNAME, TABLE_CONFIGS, TABLE_SHARE_GROUPS } from "@libs/config"
 import { hashPassword, isURL } from "@libs/utils"
 import { deleteItem, putBatch } from "@libs/dynamoDB"
 
 type MessageWithFromAndText = Message & {
-  from: TelegramBot.User,
+  from: TelegramBot.User
   text: string
 }
 type CommandHandler = (
@@ -23,7 +41,9 @@ type CommandHandler = (
   message: MessageWithFromAndText
 ) => Promise<void>
 
-const throwUsage = (usage: string): never => { throw new InvalidFormat(`使用方法为 \`${usage}\``) }
+const throwUsage = (usage: string): never => {
+  throw new InvalidFormat(`使用方法为 \`${usage}\``)
+}
 
 const onStartCommand: CommandHandler = async (bot, _, args, message) => {
   if (args.length === 1 && args[0] !== "start") {
@@ -73,9 +93,8 @@ const onCookieCommand: CommandHandler = async (bot, _, args, message) => {
     throwUsage(cookieCommandUsage)
   }
   const config = await getOrCreateConfig(message.from.id)
-  const cookieJar = config.cookies === undefined
-    ? new CookieJar()
-    : await CookieJar.deserialize(config.cookies)
+  const cookieJar =
+    config.cookies === undefined ? new CookieJar() : await CookieJar.deserialize(config.cookies)
   const url = args.shift()
   if (args.length === 0) {
     const cookie = await cookieJar.getCookieString(url)
@@ -83,7 +102,7 @@ const onCookieCommand: CommandHandler = async (bot, _, args, message) => {
       throw new DedeletedError(`没有找到对应的 Cookie: ${url}`)
     } else {
       await reply(bot, message, `当前在 ${url} 上的 Cookie 为:\n${cookie}`, false, {
-        disable_web_page_preview: true
+        disable_web_page_preview: true,
       })
     }
   } else {
@@ -96,8 +115,9 @@ const onCookieCommand: CommandHandler = async (bot, _, args, message) => {
   }
 }
 
-const configS3CommandUsage = "/config_s3 {\"accessPoint\":\"ACCESS_POINT_NAME\""
-  + ",\"accountID\":\"ACCOUNT_ID\",\"bucket\":\"BUCKET_NAME\",\"region\":\"REGION\"}"
+const configS3CommandUsage =
+  '/config_s3 {"accessPoint":"ACCESS_POINT_NAME"' +
+  ',"accountID":"ACCOUNT_ID","bucket":"BUCKET_NAME","region":"REGION"}'
 const onConfigS3Command: CommandHandler = async (bot, _, args, message) => {
   try {
     assert(args.length === 1)
@@ -119,6 +139,21 @@ const onConfigS3Command: CommandHandler = async (bot, _, args, message) => {
   }
 }
 
+const configTwitterCommandUsage = "/config_twitter TWITTER_BEARER_TOKEN"
+const onConfigTwitterCommand: CommandHandler = async (bot, _, args, message) => {
+  try {
+    assert(args.length === 1)
+    const input = args[0]
+    const config = await getOrCreateConfig(message.from.id)
+    const isCreating = config.twitterBearerToken === undefined
+    config.twitterBearerToken = input
+    await updateConfig(config)
+    await reply(bot, message, `AWS S3 设置${isCreating ? "创建" : "更新"}成功！`)
+  } catch (e) {
+    throwUsage(configTwitterCommandUsage)
+  }
+}
+
 const GroupNameRegex = /^[a-zA-Z0-9_]+$/
 const PasswordRegex = /^[a-zA-Z0-9#?!@$%^&*-]+$/
 const createShareCommandUsage = "/create_share group_name password"
@@ -131,7 +166,7 @@ const onShareCommand: CommandHandler = async (bot, command, args, message) => {
   const currentGroup = config.shareGroup
   const hasGroup = currentGroup !== undefined
   if (command === "/stop_share") {
-    if (config.isOwner && argc !== 2 || !config.isOwner && argc !== 1) {
+    if ((config.isOwner && argc !== 2) || (!config.isOwner && argc !== 1)) {
       throwUsage(stopShareCommandUsage)
     }
     if (!hasGroup) {
@@ -157,10 +192,7 @@ const onShareCommand: CommandHandler = async (bot, command, args, message) => {
   }
   const isCreating = command === "/create_share"
   if (!isCreating && argc === 0) {
-    await reply(bot, message, hasGroup
-      ? `当前共享组为: ${currentGroup}`
-      : "当前没有加入任何共享组"
-    )
+    await reply(bot, message, hasGroup ? `当前共享组为: ${currentGroup}` : "当前没有加入任何共享组")
     return
   }
   if (argc !== 2) {
@@ -222,9 +254,11 @@ const shouldSkip = (message: Message): boolean => {
     return true
   }
   const replyTo = message.reply_to_message
-  if (replyTo !== undefined && replyTo.from !== undefined && (
-    replyTo.from.username !== BOT_USERNAME || !isURL(message.text)
-  )) {
+  if (
+    replyTo !== undefined &&
+    replyTo.from !== undefined &&
+    (replyTo.from.username !== BOT_USERNAME || !isURL(message.text))
+  ) {
     // Skip for replies to messages that were sent via this bot
     // or replies that are not URLs
     return true
@@ -238,8 +272,7 @@ export const onCommand = async (bot: TelegramBot, message: Message): Promise<voi
   }
   try {
     const msg = message as MessageWithFromAndText
-    let [command, ...args] = msg.text
-      .trim().split(/\s+/)
+    let [command, ...args] = msg.text.trim().split(/\s+/)
     const mentioned = command.endsWith(`@${BOT_USERNAME}`)
     command = command.replace(`@${BOT_USERNAME}`, "")
     if (command.startsWith("/")) {
@@ -269,6 +302,9 @@ export const onCommand = async (bot: TelegramBot, message: Message): Promise<voi
         case "/config_s3":
           await onConfigS3Command(bot, command, args, msg)
           break
+        case "/config_twitter":
+          await onConfigTwitterCommand(bot, command, args, msg)
+          break
         case "/create_share":
         case "/share":
         case "/stop_share":
@@ -285,10 +321,9 @@ export const onCommand = async (bot: TelegramBot, message: Message): Promise<voi
       await onOtherBackup(bot, command, args, msg)
     }
   } catch (e) {
+    console.error(e)
     const err = e as DedeletedError
-    const text = err.isDedeletedError && !err.isPrivate
-      ? err.message
-      : "发生了错误"
+    const text = err.isDedeletedError && !err.isPrivate ? err.message : "发生了错误"
     await reply(bot, message, text)
     throw e
   }

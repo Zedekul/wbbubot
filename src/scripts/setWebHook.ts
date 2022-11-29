@@ -11,7 +11,7 @@ const setup = async () => {
   const result = await bot.setWebHook(webhookURL, {
     // The bot only reacts to these updates for now
     allowed_updates: ["message", "inline_query"],
-    drop_pending_updates: true
+    drop_pending_updates: true,
   } as unknown as SetWebHookOptions)
   console.log(result)
 }

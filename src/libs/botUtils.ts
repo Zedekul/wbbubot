@@ -22,13 +22,13 @@ export const getBot = (token: string): TelegramBot => {
         }
       }
       return target[prop]
-    }
+    },
   })
   return proxy
 }
 
 export const getUpdateType = (update: Update): UpdateType =>
-  Object.keys(update).find(key => key !== "update_id") as UpdateType
+  Object.keys(update).find((key) => key !== "update_id") as UpdateType
 
 export const getUserID = (update: Update): number | undefined => {
   const key = getUpdateType(update)
@@ -51,7 +51,9 @@ export const useArgument = (args: string[], arg: string, consume = true): boolea
 }
 
 export const reply = async (
-  bot: TelegramBot, message: Message, text: string,
+  bot: TelegramBot,
+  message: Message,
+  text: string,
   replyToMessage = false,
   options: SendMessageOptions = {}
 ): Promise<Message> => {
@@ -62,17 +64,18 @@ export const reply = async (
 }
 
 export interface MessageContent {
-  text: string,
+  text: string
   medias: TelegramBot.InputMedia[]
-  files: string[],
-  showPreview: boolean,
-  pageURLs: string[],
-  parseMode?: "HTML" | "Markdown",
+  files: string[]
+  showPreview: boolean
+  pageURLs: string[]
+  parseMode?: "HTML" | "Markdown"
   replyMarkup?: InlineKeyboardMarkup
 }
 
 export const sendContent = async (
-  bot: TelegramBot, chatID: number,
+  bot: TelegramBot,
+  chatID: number,
   content: MessageContent
 ): Promise<Message[]> => {
   const results: Message[] = []
@@ -80,7 +83,7 @@ export const sendContent = async (
   const options: SendMessageOptions = {
     parse_mode: content.parseMode === undefined ? "Markdown" : "HTML",
     disable_web_page_preview: !showPreview,
-    reply_markup: replyMarkup
+    reply_markup: replyMarkup,
   }
   const nMedia = medias.length
   if (nMedia === 1) {
@@ -91,15 +94,19 @@ export const sendContent = async (
       caption = ""
     }
     if (media.type === "photo") {
-      results.push(await bot.sendPhoto(chatID, media.media, {
-        caption,
-        ...options
-      }))
+      results.push(
+        await bot.sendPhoto(chatID, media.media, {
+          caption,
+          ...options,
+        })
+      )
     } else {
-      results.push(await bot.sendVideo(chatID, media.media, {
-        caption,
-        ...options
-      }))
+      results.push(
+        await bot.sendVideo(chatID, media.media, {
+          caption,
+          ...options,
+        })
+      )
     }
   } else if (nMedia > 0) {
     for (const batch of makeBatches(medias, 10)) {
@@ -111,21 +118,29 @@ export const sendContent = async (
   }
   let i = 0
   for (const file of content.files) {
-    results.push(await bot.sendDocument(chatID, file, {
-      caption: `附件 ${i++}`,
-      ...options
-    }))
+    results.push(
+      await bot.sendDocument(chatID, file, {
+        caption: `附件 ${i++}`,
+        ...options,
+      })
+    )
   }
   return results
 }
 
 const SupportedTagNames = [
-  "b", "strong",
-  "i", "em",
-  "u", "ins",
-  "s", "strike", "del",
+  "b",
+  "strong",
+  "i",
+  "em",
+  "u",
+  "ins",
+  "s",
+  "strike",
+  "del",
   "a",
-  "pre", "code",
+  "pre",
+  "code",
 ]
 export const removeUnsupportedTagsNode = (node: Node): Node | undefined => {
   if (node.nodeType === 3) {
@@ -148,7 +163,7 @@ export const removeUnsupportedTagsNode = (node: Node): Node | undefined => {
     element.rawTagName = undefined
     element.childNodes.push(new TextNode("\n", element))
   }
-  element.childNodes = node.childNodes.map(removeUnsupportedTagsNode).filter(x => x !== undefined)
+  element.childNodes = node.childNodes.map(removeUnsupportedTagsNode).filter((x) => x !== undefined)
   return element
 }
 export const removeUnsupportedTags = (text: string): string => {

@@ -1,9 +1,21 @@
 import * as TelegramBot from "node-telegram-bot-api"
-import { InlineQuery, InlineQueryResult, InlineQueryResultDocument, InlineQueryResultPhoto, InlineQueryResultVideo } from "node-telegram-bot-api"
+import {
+  InlineQuery,
+  InlineQueryResult,
+  InlineQueryResultDocument,
+  InlineQueryResultPhoto,
+  InlineQueryResultVideo,
+} from "node-telegram-bot-api"
 
 import { backup, BackupResult, DedeletedError } from "dedeleted"
 
-import { getConfig, getContents, getInlineKeyboardMarkup, getOptions, saveResult } from "@libs/backupUtils"
+import {
+  getConfig,
+  getContents,
+  getInlineKeyboardMarkup,
+  getOptions,
+  saveResult,
+} from "@libs/backupUtils"
 import { VIDEO_DEFAULT_THUMB } from "@libs/config"
 import { isURL, parseHTML } from "@libs/utils"
 import { removeUnsupportedTags } from "../../libs/botUtils"
@@ -29,7 +41,7 @@ export const prepareResultPages = async (result: BackupResult): Promise<InlineQu
       message_text: text,
       parse_mode: "HTML",
     },
-    reply_markup: getInlineKeyboardMarkup(result)
+    reply_markup: getInlineKeyboardMarkup(result),
   }
 }
 
@@ -37,13 +49,13 @@ export const prepareResultInlined = async (result: BackupResult): Promise<Inline
   const page0 = result.pages[0]
   const replyMarkup = getInlineKeyboardMarkup(result)
   let contents = getContents(result, 10000)
-  let textContent = contents.map(x => x.text).join("\n")
+  let textContent = contents.map((x) => x.text).join("\n")
   if (parseHTML(textContent).structuredText.length > 4000) {
     contents = getContents(result, 1, true)
-    textContent = contents.map(x => x.text).join("\n")
+    textContent = contents.map((x) => x.text).join("\n")
   }
-  const medias = contents.map(x => x.medias).flat()
-  const files = contents.map(x => x.files).flat()
+  const medias = contents.map((x) => x.medias).flat()
+  const files = contents.map((x) => x.files).flat()
 
   textContent = removeUnsupportedTags(textContent)
   const text = parseHTML(textContent).structuredText
@@ -63,7 +75,7 @@ export const prepareResultInlined = async (result: BackupResult): Promise<Inline
       parse_mode: "HTML",
       title: `发送${media.type === "photo" ? "图片" : "视频"} (${i})`,
       description: shortText,
-      reply_markup: replyMarkup
+      reply_markup: replyMarkup,
     }
     if (media.type === "photo") {
       const photo = x as unknown as InlineQueryResultPhoto
@@ -88,7 +100,7 @@ export const prepareResultInlined = async (result: BackupResult): Promise<Inline
       description: shortText,
       parse_mode: "HTML",
       document_url: file,
-      reply_markup: replyMarkup
+      reply_markup: replyMarkup,
     } as unknown as InlineQueryResultDocument)
   }
   results.push({
@@ -99,9 +111,9 @@ export const prepareResultInlined = async (result: BackupResult): Promise<Inline
     input_message_content: {
       message_text: textContent,
       parse_mode: "HTML",
-      disable_web_page_preview: true
+      disable_web_page_preview: true,
     },
-    reply_markup: replyMarkup
+    reply_markup: replyMarkup,
   })
   return results
 }
@@ -116,7 +128,7 @@ export const onInlineQuery = async (bot: TelegramBot, query: InlineQuery): Promi
       await bot.answerInlineQuery(id, [], {
         switch_pm_text: "开始使用",
         switch_pm_parameter: "start",
-        cache_time: 0
+        cache_time: 0,
       })
       return
     }
@@ -129,23 +141,21 @@ export const onInlineQuery = async (bot: TelegramBot, query: InlineQuery): Promi
       delete result.justCreated
       await saveResult(result)
     }
-    const answers = [
-      await prepareResultPages(result),
-    ].concat(await prepareResultInlined(result))
+    const answers = [await prepareResultPages(result)].concat(await prepareResultInlined(result))
     await bot.answerInlineQuery(id, answers)
   } catch (e) {
     const err = e as DedeletedError
-    const text = err.isDedeletedError && !err.isPrivate
-      ? err.message
-      : "发生了错误"
-    await bot.answerInlineQuery(id, [{
-      type: "article",
-      id: "error",
-      title: text,
-      input_message_content: {
-        message_text: text
-      }
-    }])
+    const text = err.isDedeletedError && !err.isPrivate ? err.message : "发生了错误"
+    await bot.answerInlineQuery(id, [
+      {
+        type: "article",
+        id: "error",
+        title: text,
+        input_message_content: {
+          message_text: text,
+        },
+      },
+    ])
     throw e
   }
 }

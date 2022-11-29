@@ -5,11 +5,18 @@ import webhook from "@functions/webhook"
 import {
   AWS_ACCOUNT_ID,
   BOT_DOCS_URL,
-  BOT_TOKEN, BOT_USERNAME,
+  BOT_TOKEN,
+  BOT_USERNAME,
   PRODUCTION_MODE,
-  S3_DEFAULT_ACCESS_POINT, S3_DEFAULT_BUCKET,
-  SHARE_GROUP_INDEX, SQS_QUEUE_NAME,
-  TABLE_BACKUPS, TABLE_CONFIGS, TABLE_SHARE_GROUPS, VIDEO_DEFAULT_THUMB
+  S3_DEFAULT_ACCESS_POINT,
+  S3_DEFAULT_BUCKET,
+  SHARE_GROUP_INDEX,
+  SQS_QUEUE_NAME,
+  TABLE_BACKUPS,
+  TABLE_CONFIGS,
+  TABLE_SHARE_GROUPS,
+  VIDEO_DEFAULT_THUMB,
+  DEFAULT_TWITTER_TOKEN,
 } from "@libs/config"
 
 const DEFAULT_TELEGRAPH_ACCOUNT_TOKEN = process.env.DEFAULT_TELEGRAPH_ACCOUNT_TOKEN
@@ -33,7 +40,7 @@ const serverlessConfiguration: AWS = {
   plugins: ["serverless-esbuild"],
   provider: {
     name: "aws",
-    runtime: "nodejs14.x",
+    runtime: "nodejs16.x",
     apiGateway: {
       minimumCompressionSize: 1024,
       shouldStartNameWithService: true,
@@ -52,6 +59,7 @@ const serverlessConfiguration: AWS = {
       TABLE_SHARE_GROUPS,
       S3_DEFAULT_BUCKET,
       S3_DEFAULT_ACCESS_POINT,
+      DEFAULT_TWITTER_TOKEN,
 
       BOT_DOCS_URL,
       BOT_USERNAME,
@@ -79,29 +87,27 @@ const serverlessConfiguration: AWS = {
               "dynamodb:GetItem",
               "dynamodb:UpdateItem",
               "dynamodb:DeleteItem",
-              "dynamodb:BatchWriteItem"
+              "dynamodb:BatchWriteItem",
             ],
             Resource: "arn:aws:dynamodb:*:*:table/wbbu-*",
           },
           {
             Effect: "Allow",
-            Action: [
-              "s3:PutObject"
-            ],
+            Action: ["s3:PutObject"],
             Resource: [
               `arn:aws:s3:::${S3_DEFAULT_BUCKET}`,
               `arn:aws:s3:::${S3_DEFAULT_BUCKET}/*`,
               `arn:aws:s3:*:*:accesspoint/${S3_DEFAULT_ACCESS_POINT}/*`,
-            ]
-          }
-        ]
-      }
-    }
+            ],
+          },
+        ],
+      },
+    },
   },
   // import the function via paths
   functions: {
     main,
-    webhook
+    webhook,
   },
   package: { individually: true },
   resources: {
@@ -113,8 +119,8 @@ const serverlessConfiguration: AWS = {
           FifoQueue: true,
           ContentBasedDeduplication: true,
           KmsDataKeyReusePeriodSeconds: 86400,
-          KmsMasterKeyId: "alias/aws/sqs"
-        }
+          KmsMasterKeyId: "alias/aws/sqs",
+        },
       },
       BackupsDynamoDbTable: {
         Type: "AWS::DynamoDB::Table",
@@ -122,18 +128,18 @@ const serverlessConfiguration: AWS = {
         Properties: {
           AttributeDefinitions: [
             { AttributeName: "sourceKey", AttributeType: "S" },
-            { AttributeName: "id", AttributeType: "S" }
+            { AttributeName: "id", AttributeType: "S" },
           ],
           KeySchema: [
             { AttributeName: "sourceKey", KeyType: "HASH" },
-            { AttributeName: "id", KeyType: "RANGE" }
+            { AttributeName: "id", KeyType: "RANGE" },
           ],
           ProvisionedThroughput: {
             ReadCapacityUnits: 1,
             WriteCapacityUnits: 1,
           },
-          TableName: TABLE_BACKUPS
-        }
+          TableName: TABLE_BACKUPS,
+        },
       },
       ConfigsDynamoDbTable: {
         Type: "AWS::DynamoDB::Table",
@@ -143,9 +149,7 @@ const serverlessConfiguration: AWS = {
             { AttributeName: "userID", AttributeType: "N" },
             { AttributeName: "shareGroup", AttributeType: "S" },
           ],
-          KeySchema: [
-            { AttributeName: "userID", KeyType: "HASH" }
-          ],
+          KeySchema: [{ AttributeName: "userID", KeyType: "HASH" }],
           ProvisionedThroughput: {
             ReadCapacityUnits: 1,
             WriteCapacityUnits: 1,
@@ -154,36 +158,30 @@ const serverlessConfiguration: AWS = {
           GlobalSecondaryIndexes: [
             {
               IndexName: SHARE_GROUP_INDEX,
-              KeySchema: [
-                { AttributeName: "shareGroup", KeyType: "HASH" },
-              ],
+              KeySchema: [{ AttributeName: "shareGroup", KeyType: "HASH" }],
               Projection: {
-                ProjectionType: "ALL"
+                ProjectionType: "ALL",
               },
               ProvisionedThroughput: {
                 ReadCapacityUnits: 1,
                 WriteCapacityUnits: 1,
-              }
-            }
-          ]
-        }
+              },
+            },
+          ],
+        },
       },
       ShareGroupsDynamoDbTable: {
         Type: "AWS::DynamoDB::Table",
         DeletionPolicy: "Retain",
         Properties: {
-          AttributeDefinitions: [
-            { AttributeName: "id", AttributeType: "S" }
-          ],
-          KeySchema: [
-            { AttributeName: "id", KeyType: "HASH" }
-          ],
+          AttributeDefinitions: [{ AttributeName: "id", AttributeType: "S" }],
+          KeySchema: [{ AttributeName: "id", KeyType: "HASH" }],
           ProvisionedThroughput: {
             ReadCapacityUnits: 1,
             WriteCapacityUnits: 1,
           },
-          TableName: TABLE_SHARE_GROUPS
-        }
+          TableName: TABLE_SHARE_GROUPS,
+        },
       },
       S3BucketFiles: {
         Type: "AWS::S3::Bucket",
@@ -192,20 +190,20 @@ const serverlessConfiguration: AWS = {
           BucketName: S3_DEFAULT_BUCKET,
           BucketEncryption: {
             ServerSideEncryptionConfiguration: [
-              { ServerSideEncryptionByDefault: { SSEAlgorithm: "AES256" } }
-            ]
+              { ServerSideEncryptionByDefault: { SSEAlgorithm: "AES256" } },
+            ],
           },
-          AccessControl: "PublicRead"
-        }
+          AccessControl: "PublicRead",
+        },
       },
       S3AccessPoint: {
         Type: "AWS::S3::AccessPoint",
         Properties: {
           Bucket: S3_DEFAULT_BUCKET,
-          Name: S3_DEFAULT_ACCESS_POINT
-        }
-      }
-    }
+          Name: S3_DEFAULT_ACCESS_POINT,
+        },
+      },
+    },
   },
   custom: {
     esbuild: {
@@ -213,7 +211,7 @@ const serverlessConfiguration: AWS = {
       minify: false,
       sourcemap: true,
       exclude: ["aws-sdk"],
-      target: "node14",
+      target: "node16",
       define: { "require.resolve": undefined },
       platform: "node",
       concurrency: 10,

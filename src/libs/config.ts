@@ -27,5 +27,7 @@ export const S3_DEFAULT: AWSS3Settings = {
   accessPoint: S3_DEFAULT_ACCESS_POINT,
   accountID: AWS_ACCOUNT_ID,
   bucket: S3_DEFAULT_BUCKET,
-  region: AWS_REGION
+  region: AWS_REGION,
 }
+
+export const DEFAULT_TWITTER_TOKEN = process.env.DEFAULT_TWITTER_TOKEN || ""

@@ -5,23 +5,32 @@ import { BackupResult, BackupOptions, createAccount } from "dedeleted"
 
 import {
   BOT_USERNAME,
-  TABLE_BACKUPS, TABLE_CONFIGS, TABLE_SHARE_GROUPS,
+  TABLE_BACKUPS,
+  TABLE_CONFIGS,
+  TABLE_SHARE_GROUPS,
   SHARE_GROUP_INDEX,
-  S3_DEFAULT
+  S3_DEFAULT,
+  DEFAULT_TWITTER_TOKEN,
 } from "./config"
 import { BackupKey, BackupEntity, ConfigEntity, ShareGroupEntity } from "./dbEntities"
 import { getItem, putItem, putBatch, indexQuery } from "./dynamoDB"
 import { MessageContent, removeUnsupportedTags, useArgument } from "./botUtils"
 import { shuffle, shallowCopy } from "./utils"
 
-export const getInlineKeyboardMarkup = (result: BackupResult, showAll = true): InlineKeyboardMarkup => {
+export const getInlineKeyboardMarkup = (
+  result: BackupResult,
+  showAll = true
+): InlineKeyboardMarkup => {
   const buttons: InlineKeyboardButton[] = [{ text: "查看存档", url: result.pages[0].url }]
   if (showAll && (result.reposted.length > 0 || result.pages.length > 1)) {
-    buttons.push({ text: "全部存档", url: `https://t.me/${BOT_USERNAME}?start=${result.sourceKey}-${result.id}` })
+    buttons.push({
+      text: "全部存档",
+      url: `https://t.me/${BOT_USERNAME}?start=${result.sourceKey}-${result.id}`,
+    })
   }
   buttons.push({ text: "查看原文", url: result.source })
   return {
-    inline_keyboard: [buttons]
+    inline_keyboard: [buttons],
   }
 }
 
@@ -32,10 +41,11 @@ export const getContents = (
   reposting = false
 ): MessageContent[] => {
   const { reposted } = result
-  const isTextContent = textDepth > 0 || !forcePage && result.content.length < 600
-  const contents = reposted.length > 0
-    ? reposted.map(x => getContents(x, --textDepth, forcePage, true)).flat()
-    : []
+  const isTextContent = textDepth > 0 || (!forcePage && result.content.length < 600)
+  const contents =
+    reposted.length > 0
+      ? reposted.map((x) => getContents(x, --textDepth, forcePage, true)).flat()
+      : []
   let content = reposting ? "转发自: " : ""
   let showPreview = true
   const pages = result.pages
@@ -52,13 +62,13 @@ export const getContents = (
         case "image":
           medias.push({
             type: "photo",
-            media: url
+            media: url,
           })
           break
         case "video":
           medias.push({
             type: "video",
-            media: url
+            media: url,
           })
           break
         default:
@@ -82,9 +92,9 @@ export const getContents = (
     medias,
     files,
     showPreview,
-    pageURLs: pages.map(x => x.url),
+    pageURLs: pages.map((x) => x.url),
     parseMode: "HTML",
-    replyMarkup: isTextContent ? getInlineKeyboardMarkup(result, false) : undefined
+    replyMarkup: isTextContent ? getInlineKeyboardMarkup(result, false) : undefined,
   })
   return contents
 }
@@ -94,8 +104,9 @@ export const getExistingBackup = async (key: BackupKey): Promise<BackupResult | 
   if (entity === undefined) {
     return undefined
   }
-  const reposted = (await Promise.all(entity.reposted.map(async x => getExistingBackup(x))))
-    .filter(x => x !== undefined) as BackupResult[]
+  const reposted = (
+    await Promise.all(entity.reposted.map(async (x) => getExistingBackup(x)))
+  ).filter((x) => x !== undefined) as BackupResult[]
   delete entity.reposted
   const result = entity as unknown as BackupResult
   result.reposted = reposted
@@ -108,23 +119,26 @@ export const getExistingBackup = async (key: BackupKey): Promise<BackupResult | 
 }
 
 export const getDefaultOptions = (): Partial<BackupOptions> => ({
-  checkExisting: (sourceKey, id) => getExistingBackup({ sourceKey, id })
+  checkExisting: (sourceKey, id) => getExistingBackup({ sourceKey, id }),
 })
 
-export const getConfig = async (userID: number): Promise<ConfigEntity | undefined> => 
-  await getItem<ConfigEntity>(
-    TABLE_CONFIGS, { userID }
-  )
+export const getConfig = async (userID: number): Promise<ConfigEntity | undefined> =>
+  await getItem<ConfigEntity>(TABLE_CONFIGS, { userID })
 
 export const getOrCreateConfig = async (userID: number): Promise<ConfigEntity> => {
-  const config = await getConfig(userID) || await updateConfig({
-    userID,
-    telegraphAccount: await createAccount(userID.toString())
-  })
+  const config =
+    (await getConfig(userID)) ||
+    (await updateConfig({
+      userID,
+      telegraphAccount: await createAccount(userID.toString()),
+    }))
   return config
 }
 
-export const getOptions = async (config: ConfigEntity, args: string[] = []): Promise<Partial<BackupOptions>> => {
+export const getOptions = async (
+  config: ConfigEntity,
+  args: string[] = []
+): Promise<Partial<BackupOptions>> => {
   const options = getDefaultOptions()
   options.telegraphAccount = config.telegraphAccount
   await setSharableOptions(options, config)
@@ -159,15 +173,16 @@ export const saveResult = async (result: BackupResult): Promise<void> => {
   await putBatch(TABLE_BACKUPS, resultBatch)
 }
 
-export const updateShareGroup = (id: string, creatorID: number, hashedPassword: string): Promise<void> =>
-  putItem(TABLE_SHARE_GROUPS, { id, creatorID, password: hashedPassword })
+export const updateShareGroup = (
+  id: string,
+  creatorID: number,
+  hashedPassword: string
+): Promise<void> => putItem(TABLE_SHARE_GROUPS, { id, creatorID, password: hashedPassword })
 
 export const getShareGroup = (id: string): Promise<ShareGroupEntity | undefined> =>
   getItem<ShareGroupEntity>(TABLE_SHARE_GROUPS, { id })
 
-export const getShareGroupConfigs = async (
-  shareGroup: string
-): Promise<ConfigEntity[]> => {
+export const getShareGroupConfigs = async (shareGroup: string): Promise<ConfigEntity[]> => {
   const configs = await indexQuery<ConfigEntity>(
     TABLE_CONFIGS,
     SHARE_GROUP_INDEX,
@@ -181,9 +196,8 @@ const setSharableOptions = async (
   options: Partial<BackupOptions>,
   config: ConfigEntity
 ): Promise<Partial<BackupOptions>> => {
-  const groupConfigs = config.shareGroup === undefined
-    ? [config]
-    : await getShareGroupConfigs(config.shareGroup)
+  const groupConfigs =
+    config.shareGroup === undefined ? [config] : await getShareGroupConfigs(config.shareGroup)
   const cookieJars: CookieJar[] = []
   for (const c of groupConfigs) {
     if (c.cookies !== undefined) {
@@ -192,9 +206,15 @@ const setSharableOptions = async (
     if (c.awsS3 !== undefined && options.awsS3Settings === undefined) {
       options.awsS3Settings = c.awsS3
     }
+    if (c.twitterBearerToken !== undefined && options.twitterBearerToken === undefined) {
+      options.twitterBearerToken = c.twitterBearerToken
+    }
   }
   if (options.awsS3Settings === undefined) {
     options.awsS3Settings = S3_DEFAULT
+  }
+  if (options.twitterBearerToken === undefined) {
+    options.twitterBearerToken = DEFAULT_TWITTER_TOKEN
   }
   options.getCookie = async (url) => {
     for (const cookieJar of cookieJars) {

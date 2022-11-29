@@ -11,10 +11,10 @@ export default {
         path: `/${BOT_TOKEN}/webhook`,
         request: {
           schemas: {
-            "application/json": schema
-          }
-        }
-      }
-    }
-  ]
+            "application/json": schema,
+          },
+        },
+      },
+    },
+  ],
 }

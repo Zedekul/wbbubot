@@ -6,35 +6,43 @@
   "scripts": {
     "build": "sls",
     "deploy": "sls deploy",
-    "set-webhook": "ts-node ./src/scripts/setWebHook"
+    "set-webhook": "ts-node ./src/scripts/setWebHook",
+    "prepare": "husky install"
   },
   "engines": {
-    "node": ">=14.15.0"
+    "node": ">=16.0.0"
+  },
+  "lint-staged": {
+    "**/*": "prettier --write --ignore-unknown"
   },
   "dependencies": {
-    "@aws-sdk/client-dynamodb": "^3.41.0",
-    "@aws-sdk/client-sqs": "^3.41.0",
-    "@aws-sdk/util-dynamodb": "^3.41.0",
-    "@middy/core": "^2.5.3",
-    "@middy/http-json-body-parser": "^2.5.3",
-    "@types/node-telegram-bot-api": "^0.53.2",
-    "@types/tough-cookie": "^4.0.1",
+    "@aws-sdk/client-dynamodb": "^3.216.0",
+    "@aws-sdk/client-sqs": "^3.216.0",
+    "@aws-sdk/util-dynamodb": "^3.216.0",
+    "@middy/core": "^4.0.0",
+    "@middy/http-json-body-parser": "^4.0.0",
+    "@types/node-telegram-bot-api": "^0.57.6",
+    "@types/tough-cookie": "^4.0.2",
     "dedeleted": "file:../dedeleted",
-    "dotenv": "^10.0.0",
-    "node-html-parser": "^5.1.0",
-    "node-telegram-bot-api": "^0.54.0",
-    "tough-cookie": "^4.0.0"
+    "dotenv": "^16.0.3",
+    "node-html-parser": "^6.1.4",
+    "node-telegram-bot-api": "^0.60.0",
+    "tough-cookie": "^4.1.2"
   },
   "devDependencies": {
-    "@serverless/typescript": "^2.23.0",
-    "@types/aws-lambda": "^8.10.71",
-    "@types/node": "^14.14.25",
-    "json-schema-to-ts": "^1.5.0",
-    "serverless": "^3.7.4",
-    "serverless-esbuild": "^1.17.1",
-    "ts-node": "^9.1.1",
-    "tsconfig-paths": "^3.9.0",
-    "typescript": "^4.1.3"
+    "@serverless/typescript": "^3.25.0",
+    "@types/aws-lambda": "^8.10.109",
+    "@types/node": "^18.11.9",
+    "eslint-config-prettier": "^8.5.0",
+    "husky": "^8.0.2",
+    "json-schema-to-ts": "^2.6.1",
+    "lint-staged": "^13.0.4",
+    "prettier": "^2.8.0",
+    "serverless": "^3.25.0",
+    "serverless-esbuild": "^1.33.2",
+    "ts-node": "^10.9.1",
+    "tsconfig-paths": "^4.1.0",
+    "typescript": "^4.9.3"
   },
   "author": "Zedekul",
   "license": "MIT"
