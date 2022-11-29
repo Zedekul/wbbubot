@@ -73,4 +73,4 @@ const webhook: Handler<{ Records: SQSRecord[] }> = async (event) => {
   return formatJSONResponse()
 }
 
-export const main = middyfy(webhook)
+export const main = webhook
