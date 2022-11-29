@@ -148,7 +148,7 @@ const onConfigTwitterCommand: CommandHandler = async (bot, _, args, message) => 
     const isCreating = config.twitterBearerToken === undefined
     config.twitterBearerToken = input
     await updateConfig(config)
-    await reply(bot, message, `AWS S3 设置${isCreating ? "创建" : "更新"}成功！`)
+    await reply(bot, message, `Twitter API 设置${isCreating ? "创建" : "更新"}成功！`)
   } catch (e) {
     throwUsage(configTwitterCommandUsage)
   }
